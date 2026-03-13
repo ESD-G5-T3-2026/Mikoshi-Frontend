@@ -1,15 +1,21 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
+  --onyx: #2b2a2a;
+  --graphite: #5a7acd;
+  --verdigris: #feb05d;
+  --pearl-aqua: #f5f2f2;
+
+  --text: #f5f2f2;
+  --text-h: #2b2a2a;
+  --bg: #2b2a2a;
+  --card-bg: #f5f2f2;
+  --border: rgba(245, 242, 242, 0.2);
+  --code-bg: rgba(90, 122, 205, 0.24);
+  --accent: var(--graphite);
+  --accent-bg: rgba(90, 122, 205, 0.24);
+  --accent-border: rgba(90, 122, 205, 0.62);
+  --social-bg: rgba(254, 176, 93, 0.18);
   --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+    rgba(0, 0, 0, 0.35) 0 10px 15px -3px, rgba(0, 0, 0, 0.2) 0 4px 6px -2px;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -32,17 +38,18 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
+    --text: #f5f2f2;
+    --text-h: #f5f2f2;
+    --bg: var(--onyx);
+    --card-bg: #3a3939;
+    --border: rgba(245, 242, 242, 0.25);
+    --code-bg: rgba(90, 122, 205, 0.2);
+    --accent: var(--verdigris);
+    --accent-bg: rgba(254, 176, 93, 0.22);
+    --accent-border: rgba(254, 176, 93, 0.55);
+    --social-bg: rgba(90, 122, 205, 0.22);
     --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+      rgba(0, 0, 0, 0.5) 0 10px 15px -3px, rgba(0, 0, 0, 0.3) 0 4px 6px -2px;
   }
 
   #social .button-icon {

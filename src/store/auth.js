@@ -4,6 +4,12 @@ const LOGIN_FAILURE = "auth/LOGIN_FAILURE";
 const LOGOUT_REQUEST = "auth/LOGOUT_REQUEST";
 const LOGOUT_SUCCESS = "auth/LOGOUT_SUCCESS";
 const LOGOUT_FAILURE = "auth/LOGOUT_FAILURE";
+const HYDRATE_USER_REQUEST = "auth/HYDRATE_USER_REQUEST";
+const HYDRATE_USER_SUCCESS = "auth/HYDRATE_USER_SUCCESS";
+const HYDRATE_USER_FAILURE = "auth/HYDRATE_USER_FAILURE";
+const CLEAR_AUTH_REQUEST = "auth/CLEAR_AUTH_REQUEST";
+const CLEAR_AUTH_SUCCESS = "auth/CLEAR_AUTH_SUCCESS";
+const CLEAR_AUTH_FAILURE = "auth/CLEAR_AUTH_FAILURE";
 
 const initialState = {
 	user: null,
@@ -33,6 +39,31 @@ export function authReducer(state = initialState, action) {
 			return { user: null, error: null };
 		case LOGOUT_FAILURE:
 			return { ...state, error: action.payload };
+		case HYDRATE_USER_REQUEST:
+			return { ...state, error: null };
+		case HYDRATE_USER_SUCCESS:
+			return {
+				user: action.payload,
+				error: null,
+			};
+		case HYDRATE_USER_FAILURE:
+			return {
+				...state,
+				user: null,
+				error: action.payload || null,
+			};
+		case CLEAR_AUTH_REQUEST:
+			return { ...state, error: null };
+		case CLEAR_AUTH_SUCCESS:
+			return {
+				user: null,
+				error: null,
+			};
+		case CLEAR_AUTH_FAILURE:
+			return {
+				...state,
+				error: action.payload || null,
+			};
 		default:
 			return state;
 	}
@@ -94,5 +125,44 @@ export function logoutFailure(message) {
 				message: message || "Logout failed",
 			},
 		},
+	};
+}
+
+export function hydrateUserRequest() {
+	return {
+		type: HYDRATE_USER_REQUEST,
+	};
+}
+
+export function hydrateUserSuccess(user) {
+	return {
+		type: HYDRATE_USER_SUCCESS,
+		payload: user,
+	};
+}
+
+export function hydrateUserFailure(message) {
+	return {
+		type: HYDRATE_USER_FAILURE,
+		payload: message,
+	};
+}
+
+export function clearAuthRequest() {
+	return {
+		type: CLEAR_AUTH_REQUEST,
+	};
+}
+
+export function clearAuthSuccess() {
+	return {
+		type: CLEAR_AUTH_SUCCESS,
+	};
+}
+
+export function clearAuthFailure(message) {
+	return {
+		type: CLEAR_AUTH_FAILURE,
+		payload: message,
 	};
 }

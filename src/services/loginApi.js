@@ -11,3 +11,8 @@ export async function logoutApi() {
   const response = await apiClient.post(PATH +'/logout')
   return response.data
 }
+
+export async function getSession() {
+  const response = await apiClient.get(PATH + '/check')
+  return response.data
+}

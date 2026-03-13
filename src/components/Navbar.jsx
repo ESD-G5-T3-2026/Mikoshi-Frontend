@@ -48,6 +48,11 @@ function Navbar({ user }) {
 						Dashboard
 					</Link>
 				</nav>
+                <nav className="app-navbar-links" aria-label="Main navigation">
+					<Link to="/meeting" className={location.pathname === "/meeting" ? "active" : ""}>
+						Meetings
+					</Link>
+				</nav>
 			</div>
 
 			<div className="app-navbar-user-menu" ref={menuRef}>

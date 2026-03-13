@@ -1,10 +1,34 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import CreateEventModal from './components/CreateEventModal'
 import DashboardContent from './components/DashboardContent'
 import EventDetailsModal from './components/EventDetailsModal'
-import { getEvents } from '../../services/eventApi'
+import { createEvent, getEvents, updateEventStatus } from '../../services/eventApi'
 import { showToast } from '../../store/toast'
 import './Dashboard.css'
+
+const GET_EVENTS_REQUEST = 'events/GET_EVENTS_REQUEST'
+const GET_EVENTS_SUCCESS = 'events/GET_EVENTS_SUCCESS'
+const GET_EVENTS_FAILURE = 'events/GET_EVENTS_FAILURE'
+const CREATE_EVENT_REQUEST = 'events/CREATE_EVENT_REQUEST'
+const CREATE_EVENT_SUCCESS = 'events/CREATE_EVENT_SUCCESS'
+const CREATE_EVENT_FAILURE = 'events/CREATE_EVENT_FAILURE'
+const UPDATE_EVENT_STATUS_REQUEST = 'events/UPDATE_EVENT_STATUS_REQUEST'
+const UPDATE_EVENT_STATUS_SUCCESS = 'events/UPDATE_EVENT_STATUS_SUCCESS'
+const UPDATE_EVENT_STATUS_FAILURE = 'events/UPDATE_EVENT_STATUS_FAILURE'
+const UPDATE_EVENT_DETAILS_REQUEST = 'events/UPDATE_EVENT_DETAILS_REQUEST'
+const UPDATE_EVENT_DETAILS_SUCCESS = 'events/UPDATE_EVENT_DETAILS_SUCCESS'
+const UPDATE_EVENT_DETAILS_FAILURE = 'events/UPDATE_EVENT_DETAILS_FAILURE'
+
+const initialCreateEventForm = {
+  event_name: '',
+  event_year: '',
+  event_date: '',
+  event_type: '',
+  event_status: 'Pending',
+  event_desc: '',
+  remarks: '',
+}
 
 function DashboardPage() {
   const dispatch = useDispatch()
@@ -12,6 +36,8 @@ function DashboardPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState('All')
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [createEventForm, setCreateEventForm] = useState(initialCreateEventForm)
   const [rows, setRows] = useState([])
 
   useEffect(() => {
@@ -81,6 +107,7 @@ function DashboardPage() {
         name: eventRow?.event_name|| 'Untitled Event',
         year: derivedYear || new Date().getFullYear(),
         datetime,
+        type: eventRow?.event_type || '',
         description: eventRow?.event_desc  || '',
         status: normalizeStatus(eventRow?.event_status),
         remarks: eventRow?.remarks || '',
@@ -93,6 +120,8 @@ function DashboardPage() {
         return
       }
 
+      dispatch({ type: GET_EVENTS_REQUEST })
+
       try {
         const eventData = await getEvents(user.club_id)
         const rawEvents = Array.isArray(eventData)
@@ -102,8 +131,10 @@ function DashboardPage() {
             : []
 
         setRows(rawEvents.map(mapEventRow))
+        dispatch({ type: GET_EVENTS_SUCCESS })
       } catch {
         setRows([])
+        dispatch({ type: GET_EVENTS_FAILURE })
         dispatch(showToast('Failed to load events.', 'error'))
       }
     }
@@ -133,26 +164,119 @@ function DashboardPage() {
     setIsFilterOpen(false)
   }
 
-  const handleUpdateEventStatus = (eventId, nextStatus) => {
-    setRows((previousRows) =>
-      previousRows.map((row) =>
-        row.id === eventId
+  const handleOpenCreateModal = () => {
+    setCreateEventForm(initialCreateEventForm)
+    setIsCreateModalOpen(true)
+  }
+
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false)
+  }
+
+  const handleCreateEventChange = (event) => {
+    const { name, value } = event.target
+
+    setCreateEventForm((previousForm) => ({
+      ...previousForm,
+      [name]: value,
+    }))
+  }
+
+  const handleCreateEventSubmit = async (event) => {
+    event.preventDefault()
+
+    const payload = {
+      event_name: createEventForm.event_name.trim(),
+      event_year: Number(createEventForm.event_year),
+      event_date: createEventForm.event_date,
+      event_type: createEventForm.event_type.trim(),
+      event_status: createEventForm.event_status,
+      event_desc: createEventForm.event_desc.trim(),
+      remarks: createEventForm.remarks.trim(),
+      run_by_club: user?.club_id,
+    }
+
+    dispatch({ type: CREATE_EVENT_REQUEST })
+
+    try {
+      const responseData = await createEvent(payload)
+      const createdEvent = responseData?.data || responseData?.event || responseData
+
+      setRows((previousRows) => [
+        {
+          id: createdEvent?.id ?? createdEvent?.event_id ?? Date.now(),
+          name: createdEvent?.event_name ?? payload.event_name,
+          year: createdEvent?.event_year ?? payload.event_year,
+          datetime: createdEvent?.event_date ? `${createdEvent.event_date} 00:00` : `${payload.event_date} 00:00`,
+          type: createdEvent?.event_type ?? payload.event_type,
+          description: createdEvent?.event_desc ?? payload.event_desc,
+          status: createdEvent?.event_status ?? payload.event_status,
+          remarks: createdEvent?.remarks ?? payload.remarks,
+        },
+        ...previousRows,
+      ])
+
+      dispatch({ type: CREATE_EVENT_SUCCESS })
+      dispatch(showToast('Event created successfully.', 'success'))
+      setCreateEventForm(initialCreateEventForm)
+      setIsCreateModalOpen(false)
+    } catch {
+      dispatch({ type: CREATE_EVENT_FAILURE })
+      dispatch(showToast('Failed to create event.', 'error'))
+    }
+  }
+
+  const handleUpdateEventStatus = async (eventId, nextStatus) => {
+    const currentEvent = rows.find((row) => row.id === eventId)
+    if (!currentEvent) {
+      return
+    }
+
+    setSelectedEvent(null)
+
+    const payload = {
+      event_id: eventId,
+      event_name: currentEvent.name,
+      event_year: Number(currentEvent.year),
+      event_date: currentEvent.datetime ? currentEvent.datetime.split(' ')[0] : '',
+      event_type: currentEvent.type,
+      event_desc: currentEvent.description,
+      event_status: nextStatus,
+      remarks: currentEvent.remarks,
+      run_by_club: user?.club_id,
+    }
+
+    dispatch({ type: UPDATE_EVENT_STATUS_REQUEST })
+
+    try {
+      await updateEventStatus({Event: payload})
+
+      setRows((previousRows) =>
+        previousRows.map((row) =>
+          row.id === eventId
+            ? {
+                ...row,
+                status: nextStatus,
+              }
+            : row,
+        ),
+      )
+
+      setSelectedEvent((previousEvent) =>
+        previousEvent && previousEvent.id === eventId
           ? {
-              ...row,
+              ...previousEvent,
               status: nextStatus,
             }
-          : row,
-      ),
-    )
+          : previousEvent,
+      )
 
-    setSelectedEvent((previousEvent) =>
-      previousEvent && previousEvent.id === eventId
-        ? {
-            ...previousEvent,
-            status: nextStatus,
-          }
-        : previousEvent,
-    )
+      dispatch({ type: UPDATE_EVENT_STATUS_SUCCESS })
+      dispatch(showToast(`Event status updated to ${nextStatus}.`, 'success'))
+    } catch {
+      dispatch({ type: UPDATE_EVENT_STATUS_FAILURE })
+      dispatch(showToast('Failed to update event status.', 'error'))
+    }
   }
 
   const handleGetInsights = (eventId) => {
@@ -184,6 +308,70 @@ function DashboardPage() {
           }
         : previousEvent,
     )
+  }
+
+  const handleUpdateEventDetails = async (eventId, nextValues) => {
+    const currentEvent = rows.find((row) => row.id === eventId)
+    if (!currentEvent) {
+      return false
+    }
+
+    const payload = {
+      event_id: eventId,
+      event_name: nextValues.event_name.trim(),
+      event_year: Number(nextValues.event_year),
+      event_date: nextValues.event_date,
+      event_type: nextValues.event_type.trim(),
+      event_desc: nextValues.event_desc.trim(),
+      event_status: currentEvent.status,
+      remarks: nextValues.remarks.trim(),
+      run_by_club: user?.club_id,
+    }
+
+    dispatch({ type: UPDATE_EVENT_DETAILS_REQUEST })
+
+    try {
+      await updateEventStatus({ Event: payload })
+
+      setRows((previousRows) =>
+        previousRows.map((row) =>
+          row.id === eventId
+            ? {
+                ...row,
+                name: payload.event_name,
+                year: payload.event_year,
+                datetime: `${payload.event_date} 00:00`,
+                description: payload.event_desc,
+                remarks: payload.remarks,
+                type: payload.event_type,
+              }
+            : row,
+        ),
+      )
+
+      setSelectedEvent((previousEvent) =>
+        previousEvent && previousEvent.id === eventId
+          ? {
+              ...previousEvent,
+              name: payload.event_name,
+              year: payload.event_year,
+              datetime: `${payload.event_date} 00:00`,
+              description: payload.event_desc,
+              remarks: payload.remarks,
+              type: payload.event_type,
+            }
+          : previousEvent,
+      )
+
+      dispatch({ type: UPDATE_EVENT_DETAILS_SUCCESS })
+      dispatch(showToast('Event updated successfully.', 'success'))
+      setSelectedEvent(null)
+      return true
+    } catch {
+      dispatch({ type: UPDATE_EVENT_DETAILS_FAILURE })
+      dispatch(showToast('Failed to update event.', 'error'))
+      return false
+    }
   }
 
   const formatDateTime = (rawDateTime) => {
@@ -243,7 +431,17 @@ function DashboardPage() {
   return (
     <main className="dashboard-page">
       <section className="dashboard-card" aria-label="Dashboard">
-        <h1>View Events</h1>
+        <div className="dashboard-header-row">
+          <h1>View Events</h1>
+          <button
+            type="button"
+            className="dashboard-add-button"
+            aria-label="Add event"
+            onClick={handleOpenCreateModal}
+          >
+            <span className="dashboard-add-button-icon">+</span>
+          </button>
+        </div>
 
         <div className="dashboard-table-toolbar">
           <div className="dashboard-filter-menu">
@@ -291,6 +489,16 @@ function DashboardPage() {
           getDurationLeft={getDurationLeft}
           onUpdateStatus={handleUpdateEventStatus}
           getInsights={handleGetInsights}
+          onUpdateEvent={handleUpdateEventDetails}
+        />
+
+        <CreateEventModal
+          key={isCreateModalOpen ? 'create-event-modal-open' : 'create-event-modal-closed'}
+          isOpen={isCreateModalOpen}
+          form={createEventForm}
+          onClose={handleCloseCreateModal}
+          onChange={handleCreateEventChange}
+          onSubmit={handleCreateEventSubmit}
         />
       </section>
     </main>

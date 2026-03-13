@@ -10,3 +10,13 @@ export async function getEvents(clubId) {
   })
   return response.data
 }
+
+export async function createEvent(payload) {
+  const response = await apiClient.post(`/events/CreateEvent`, payload)
+  return response.data
+}
+
+export async function updateEventStatus(payload) {
+  const response = await apiClient.put(`${PATH}/UpdateEvent`, payload)
+  return response.data
+}

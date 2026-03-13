@@ -139,7 +139,7 @@
   padding: 14px;
   box-shadow: var(--shadow);
   transition: transform 0.15s ease, background-color 0.15s ease;
-  cursor: pointer;
+    cursor: pointer;
 }
 
 .event-card:hover {
@@ -147,6 +147,10 @@
   transform: translateY(-1px);
 }
 
+.event-modal-header-back {
+  display: flex;
+  align-items: center;
+}
 .event-card-top {
   display: flex;
   align-items: baseline;

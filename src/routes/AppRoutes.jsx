@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import DashboardPage from '../pages/Dashboard'
 import LoginPage from '../pages/Login'
+import MeetingPage from '../pages/Meeting'
 import { showToast } from '../store/toast'
 
 function ProtectedRoute({ sessionChecked, children }) {
@@ -65,6 +66,14 @@ function AppRoutes({ sessionChecked }) {
         element={
           <ProtectedRoute sessionChecked={sessionChecked}>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/meeting"
+        element={
+          <ProtectedRoute sessionChecked={sessionChecked}>
+            <MeetingPage />
           </ProtectedRoute>
         }
       />

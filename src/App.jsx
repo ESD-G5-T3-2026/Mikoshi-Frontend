@@ -54,7 +54,7 @@ function App() {
   return (
     <>
       {(!sessionChecked || user) && <Navbar user={user} />}
-      <AppRoutes />
+      <AppRoutes sessionChecked={sessionChecked} />
       <GlobalToast />
       {isLoading && <GlobalSpinner />}
     </>

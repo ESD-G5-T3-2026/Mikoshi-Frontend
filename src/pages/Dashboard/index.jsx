@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import CreateEventModal from './components/CreateEventModal'
 import DashboardContent from './components/DashboardContent'
 import EventDetailsModal from './components/EventDetailsModal'
-import { createEvent, getEvents, updateEventStatus } from '../../services/eventApi'
+import { createEvent, getEvents, updateEvent } from '../../services/eventApi'
 import { showToast } from '../../store/toast'
 import './Dashboard.css'
 
@@ -226,7 +226,7 @@ function DashboardPage() {
     }
   }
 
-  const handleUpdateEventStatus = async (eventId, nextStatus) => {
+  const handleupdateEvent = async (eventId, nextStatus) => {
     const currentEvent = rows.find((row) => row.id === eventId)
     if (!currentEvent) {
       return
@@ -249,7 +249,7 @@ function DashboardPage() {
     dispatch({ type: UPDATE_EVENT_STATUS_REQUEST })
 
     try {
-      await updateEventStatus({Event: payload})
+      await updateEvent(payload)
 
       setRows((previousRows) =>
         previousRows.map((row) =>
@@ -331,7 +331,7 @@ function DashboardPage() {
     dispatch({ type: UPDATE_EVENT_DETAILS_REQUEST })
 
     try {
-      await updateEventStatus({ Event: payload })
+      await updateEvent(payload)
 
       setRows((previousRows) =>
         previousRows.map((row) =>
@@ -487,7 +487,7 @@ function DashboardPage() {
           onClose={() => setSelectedEvent(null)}
           formatDateTime={formatDateTime}
           getDurationLeft={getDurationLeft}
-          onUpdateStatus={handleUpdateEventStatus}
+          onUpdateStatus={handleupdateEvent}
           getInsights={handleGetInsights}
           onUpdateEvent={handleUpdateEventDetails}
         />

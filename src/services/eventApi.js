@@ -16,7 +16,7 @@ export async function createEvent(payload) {
   return response.data
 }
 
-export async function updateEventStatus(payload) {
+export async function updateEvent(payload) {
   const response = await apiClient.put(`${PATH}/UpdateEvent`, payload)
   return response.data
 }

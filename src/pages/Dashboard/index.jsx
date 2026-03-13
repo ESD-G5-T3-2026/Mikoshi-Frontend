@@ -1,50 +1,115 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import DashboardContent from './components/DashboardContent'
 import EventDetailsModal from './components/EventDetailsModal'
+import { getEvents } from '../../services/eventApi'
+import { showToast } from '../../store/toast'
 import './Dashboard.css'
 
 function DashboardPage() {
+  const dispatch = useDispatch()
+  const user = useSelector((state) => state.auth.user)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState('All')
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [rows, setRows] = useState([])
 
-  const [rows, setRows] = useState([
-    {
-      id: 1,
-      name: 'Wears Hats',
-      year: 2026,
-      datetime: '2026-02-14 14:30',
-      description: 'Come down to wear some hats again ',
-      status: 'Active',
-      remarks: 'test',
-    },
-    {
-      id: 2,
-      name: 'Wears Hats',
-      year: 2025,
-      datetime: '2025-11-03 09:00',
-      description: 'Come down to wear some hats',
-      status: 'Completed',
-      remarks: 'test',
-    },
-    {
-      id: 3,
-      name: 'Take out hats',
-      year: 2026,
-      datetime: '2026-06-20 17:45',
-      description: 'We dont like hats',
-      status: 'Active',
-      remarks: 'test',
-    },
-    {
-      id: 4,
-      name: 'Drop Hats',
-      year: 2026,
-      datetime: '2026-08-01 11:15',
-      description: 'We put hats on floor',
-      status: 'Pending',
-    },
-  ])
+  useEffect(() => {
+    const normalizeDateTime = (value) => {
+      if (!value) {
+        return ''
+      }
+
+      if (typeof value === 'string') {
+        const trimmedValue = value.trim()
+
+        if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(trimmedValue)) {
+          return trimmedValue.slice(0, 16)
+        }
+
+        if (/^\d{4}-\d{2}-\d{2}$/.test(trimmedValue)) {
+          return `${trimmedValue} 00:00`
+        }
+
+        if (trimmedValue.includes('T')) {
+          return trimmedValue.replace('T', ' ').slice(0, 16)
+        }
+      }
+
+      const parsedDate = new Date(value)
+      if (Number.isNaN(parsedDate.getTime())) {
+        return ''
+      }
+
+      const year = parsedDate.getFullYear()
+      const month = String(parsedDate.getMonth() + 1).padStart(2, '0')
+      const day = String(parsedDate.getDate()).padStart(2, '0')
+      const hour = String(parsedDate.getHours()).padStart(2, '0')
+      const minute = String(parsedDate.getMinutes()).padStart(2, '0')
+
+      return `${year}-${month}-${day} ${hour}:${minute}`
+    }
+
+    const normalizeStatus = (value) => {
+      if (!value || typeof value !== 'string') {
+        return 'Pending'
+      }
+
+      const lowered = value.toLowerCase()
+      if (lowered === 'active') {
+        return 'Active'
+      }
+      if (lowered === 'completed') {
+        return 'Completed'
+      }
+      if (lowered === 'pending') {
+        return 'Pending'
+      }
+      return 'Pending'
+    }
+
+    const mapEventRow = (eventRow, index) => {
+      const datetime = normalizeDateTime(
+        eventRow?.event_date
+      )
+      const parsedDate = datetime ? new Date(datetime.replace(' ', 'T')) : null
+      const derivedYear =
+        eventRow?.event_year || (parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate.getFullYear() : null)
+
+      return {
+        id: eventRow?.id ?? eventRow?.event_id ?? index,
+        name: eventRow?.event_name|| 'Untitled Event',
+        year: derivedYear || new Date().getFullYear(),
+        datetime,
+        description: eventRow?.event_desc  || '',
+        status: normalizeStatus(eventRow?.event_status),
+        remarks: eventRow?.remarks || '',
+      }
+    }
+
+    const loadEvents = async () => {
+      if (!user?.club_id) {
+        setRows([])
+        return
+      }
+
+      try {
+        const eventData = await getEvents(user.club_id)
+        const rawEvents = Array.isArray(eventData)
+          ? eventData
+          : Array.isArray(eventData?.data)
+            ? eventData.data
+            : []
+
+        setRows(rawEvents.map(mapEventRow))
+      } catch {
+        setRows([])
+        dispatch(showToast('Failed to load events.', 'error'))
+      }
+    }
+
+    loadEvents()
+  }, [dispatch, user?.club_id])
 
   const statusOptions = ['All', 'Active', 'Pending', 'Completed']
 
@@ -122,7 +187,15 @@ function DashboardPage() {
   }
 
   const formatDateTime = (rawDateTime) => {
+    if (!rawDateTime) {
+      return '-'
+    }
+
     const [datePart, timePart] = rawDateTime.split(' ')
+    if (!datePart || !timePart) {
+      return rawDateTime
+    }
+
     const [, month, day] = datePart.split('-').map(Number)
     const [hour24, minute] = timePart.split(':').map(Number)
 
@@ -134,7 +207,15 @@ function DashboardPage() {
   }
 
   const getDurationLeft = (rawDateTime) => {
+    if (!rawDateTime) {
+      return ''
+    }
+
     const eventDate = new Date(rawDateTime.replace(' ', 'T'))
+    if (Number.isNaN(eventDate.getTime())) {
+      return ''
+    }
+
     const now = new Date()
 
     const diffMs = eventDate.getTime() - now.getTime()

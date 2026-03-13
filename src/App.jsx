@@ -29,9 +29,9 @@ function App() {
     const hydrateSession = async () => {
       dispatch(hydrateUserRequest())
       try {
-        const sessionData = await getSession()
-        if (sessionData?.user) {
-          dispatch(hydrateUserSuccess(sessionData.user))
+        const sessionUser = await getSession()
+        if (sessionUser) {
+          dispatch(hydrateUserSuccess(sessionUser))
         } else {
           dispatch(hydrateUserFailure('No active session'))
           dispatch(clearAuthRequest())

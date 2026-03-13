@@ -14,6 +14,7 @@ const CLEAR_AUTH_FAILURE = "auth/CLEAR_AUTH_FAILURE";
 const initialState = {
 	user: null,
 	error: null,
+	lastAuthEvent: null,
 };
 
 export function authReducer(state = initialState, action) {
@@ -22,47 +23,54 @@ export function authReducer(state = initialState, action) {
 			return {
 				...state,
 				error: null,
+				lastAuthEvent: null,
 			};
 		case LOGIN_SUCCESS:
 			return {
 				user: action.payload,
 				error: null,
+				lastAuthEvent: "login-success",
 			};
 		case LOGIN_FAILURE:
 			return {
 				...state,
 				error: action.payload,
+				lastAuthEvent: null,
 			};
 		case LOGOUT_REQUEST:
-			return { ...state, error: null };
+			return { ...state, error: null, lastAuthEvent: null };
 		case LOGOUT_SUCCESS:
-			return { user: null, error: null };
+			return { user: null, error: null, lastAuthEvent: "logout-success" };
 		case LOGOUT_FAILURE:
-			return { ...state, error: action.payload };
+			return { ...state, error: action.payload, lastAuthEvent: null };
 		case HYDRATE_USER_REQUEST:
-			return { ...state, error: null };
+			return { ...state, error: null, lastAuthEvent: null };
 		case HYDRATE_USER_SUCCESS:
 			return {
 				user: action.payload,
 				error: null,
+				lastAuthEvent: null,
 			};
 		case HYDRATE_USER_FAILURE:
 			return {
 				...state,
 				user: null,
 				error: action.payload || null,
+				lastAuthEvent: null,
 			};
 		case CLEAR_AUTH_REQUEST:
-			return { ...state, error: null };
+			return { ...state, error: null, lastAuthEvent: null };
 		case CLEAR_AUTH_SUCCESS:
 			return {
 				user: null,
 				error: null,
+				lastAuthEvent: null,
 			};
 		case CLEAR_AUTH_FAILURE:
 			return {
 				...state,
 				error: action.payload || null,
+				lastAuthEvent: null,
 			};
 		default:
 			return state;

@@ -8,12 +8,13 @@ import { showToast } from '../store/toast'
 function ProtectedRoute({ sessionChecked, children }) {
   const dispatch = useDispatch()
   const user = useSelector((state) => state.auth.user)
+  const lastAuthEvent = useSelector((state) => state.auth.lastAuthEvent)
 
   useEffect(() => {
-    if (sessionChecked && !user) {
+    if (sessionChecked && !user && lastAuthEvent !== 'logout-success') {
       dispatch(showToast('Please log in to access dashboard.', 'error'))
     }
-  }, [dispatch, sessionChecked, user])
+  }, [dispatch, lastAuthEvent, sessionChecked, user])
 
   if (!sessionChecked) {
     return null
@@ -29,12 +30,13 @@ function ProtectedRoute({ sessionChecked, children }) {
 function PublicOnlyRoute({ sessionChecked, children }) {
   const dispatch = useDispatch()
   const user = useSelector((state) => state.auth.user)
+  const lastAuthEvent = useSelector((state) => state.auth.lastAuthEvent)
 
   useEffect(() => {
-    if (sessionChecked && user) {
+    if (sessionChecked && user && lastAuthEvent !== 'login-success') {
       dispatch(showToast('Logout to go back to login page', 'error'))
     }
-  }, [dispatch, sessionChecked, user])
+  }, [dispatch, lastAuthEvent, sessionChecked, user])
 
   if (!sessionChecked) {
     return null

@@ -16,6 +16,8 @@
   border-top-color: var(--accent);
   animation: global-spinner-rotate 0.8s linear infinite;
   background: transparent;
+  z-index: 9999;
+
 }
 
 @keyframes global-spinner-rotate {

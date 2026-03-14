@@ -11,6 +11,7 @@ const CREATE_MEETING_FAILURE = "meeting/CREATE_MEETING_FAILURE";
 
 const initialCreateMeetingForm = {
 	meeting_datetime: "",
+	personnel_list: {},
 };
 
 function MeetingPage() {
@@ -103,7 +104,7 @@ function MeetingPage() {
 								meeting_dt: m.meeting_dt,
 								timeful_link: m.timeful_link,
 								zoom_link: m.zoom_link,
-								personnel: m.personnel_list,
+								personnel_list: m.personnel_list,
 								status: new Date() >= new Date(m.meeting_dt) ? "Completed" : m.status,
 							}))
 							.sort((a, b) => new Date(b.dt) - new Date(a.dt)),
@@ -137,14 +138,14 @@ function MeetingPage() {
 		const payload = {
 			meeting_dt: createMeetingForm.meeting_datetime,
 			club_id: user?.club_id,
-			personnel_list: {},
+			personnel_list: createMeetingForm.personnel_list,
 		};
 		dispatch({ type: CREATE_MEETING_REQUEST });
 
 		try {
 			setIsCreateModalOpen(false);
 			const response = await createMeeting(user?.club_id, payload);
-			const newMeeting = response.data[0]
+			const newMeeting = response.data[0];
 
 			const mappedMeeting = {
 				id: newMeeting.id,
@@ -152,7 +153,7 @@ function MeetingPage() {
 				meeting_dt: newMeeting.meeting_dt,
 				timeful_link: newMeeting.timeful_link,
 				zoom_link: newMeeting.zoom_link,
-				personnel: newMeeting.personnel_list,
+				personnel_list: newMeeting.personnel_list,
 				status: new Date() >= new Date(newMeeting.meeting_dt) ? "Completed" : newMeeting.status,
 			};
 
@@ -188,6 +189,8 @@ function MeetingPage() {
 									<span className="event-datetime">{normalizeDateTime(meeting.dt)}</span>
 								</div>
 								<p>Status: {meeting.status}</p>
+								{meeting.personnel_list && Object.keys(meeting.personnel_list).length > 0 && <p>Attendees: {Object.keys(meeting.personnel_list).join(", ")}</p>}
+
 								{meeting.status == "Pending" ? (
 									<div>
 										<p>

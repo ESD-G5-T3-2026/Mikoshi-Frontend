@@ -1,7 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getPersonnel } from "../../../services/personnelApi";
+import { showToast } from "../../../store/toast";
 
 function CreateMeetingModal({ isOpen, onClose, onChange, onSubmit, form }) {
+	const dispatch = useDispatch();
 	const [showValidation, setShowValidation] = useState(false);
+	const [personnelOptions, setPersonnelOptions] = useState([]);
+	const [loadingPersonnel, setLoadingPersonnel] = useState(false);
+	const user = useSelector((state) => state.auth.user);
+	const clubId = user?.club_id;
+
+	useEffect(() => {
+		if (isOpen) {
+			setLoadingPersonnel(true);
+			try {
+				dispatch({ type: "GET_PERSONNEL_REQUEST" });
+				getPersonnel(clubId).then((data) => {
+					const results = data.data;
+					const filtered = results.map((item) => ({
+						name: item.name,
+						handle: item.telegram_handle,
+					}));
+					setPersonnelOptions(filtered);
+					setLoadingPersonnel(false);
+				});
+				dispatch({ type: "GET_PERSONNEL_SUCCESS" });
+			} catch {
+				setLoadingPersonnel(false);
+				dispatch({ type: "GET_PERSONNEL_FAILURE" });
+				dispatch(showToast("Failed to create meeting.", "error"));
+			}
+		}
+	}, [isOpen]);
 
 	if (!isOpen) {
 		return null;
@@ -43,6 +74,36 @@ function CreateMeetingModal({ isOpen, onClose, onChange, onSubmit, form }) {
 						{showValidation && fieldErrors.meeting_datetime && <span className="event-create-error">{fieldErrors.meeting_datetime}</span>}
 					</label>
 
+					<label className="event-create-field">
+						<span>Select Attendees</span>
+						{loadingPersonnel ? (
+							<div style={{ padding: "8px 0" }}>Loading attendees...</div>
+						) : (
+							<div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+								{personnelOptions.map(({ name, handle }) => (
+									<label key={name} style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 400 }}>
+										<input
+											type="checkbox"
+											name="personnel_list"
+											value={name}
+											checked={form.personnel_list && form.personnel_list[name] ? true : false}
+											onChange={(e) => {
+												let updated = { ...(form.personnel_list || {}) };
+												if (e.target.checked) {
+													updated[name] = handle;
+												} else {
+													delete updated[name];
+												}
+												onChange({ target: { name: "personnel_list", value: updated } });
+											}}
+											style={{ width: "auto" }}
+										/>
+										{name}
+									</label>
+								))}
+							</div>
+						)}
+					</label>
 					<div className="event-create-actions">
 						<button type="button" className="event-modal-action-btn event-modal-action-cancel" onClick={onClose}>
 							Cancel

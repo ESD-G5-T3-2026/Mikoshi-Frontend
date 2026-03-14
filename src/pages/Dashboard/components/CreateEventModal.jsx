@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 function CreateEventModal({ isOpen, form, onClose, onChange, onSubmit }) {
 	const [showValidation, setShowValidation] = useState(false);
@@ -8,11 +8,11 @@ function CreateEventModal({ isOpen, form, onClose, onChange, onSubmit }) {
 	}
 
 	const fieldErrors = {
-		event_name: !form.event_name.trim() ? 'Event name is required.' : '',
-		event_type: !form.event_type.trim() ? 'Event type is required.' : '',
-		event_year: !String(form.event_year).trim() ? 'Year is required.' : '',
-		event_date: !String(form.event_date).trim() ? 'Date is required.' : '',
-		event_desc: !form.event_desc.trim() ? 'Description is required.' : '',
+		event_name: !form.event_name.trim() ? "Event name is required." : "",
+		event_type: !form.event_type.trim() ? "Event type is required." : "",
+		event_year: !String(form.event_year).trim() ? "Year is required." : Number(form.event_year) < new Date().getFullYear() ? "Year must be this year or later." : "",
+		event_date: !String(form.event_date).trim() ? "Date and Time are required." : form.event_date && new Date(form.event_date) < new Date() ? "Date and Time must be in the future." : "",
+		event_desc: !form.event_desc.trim() ? "Description is required." : "",
 	};
 
 	const handleSubmit = (event) => {
@@ -81,13 +81,7 @@ function CreateEventModal({ isOpen, form, onClose, onChange, onSubmit }) {
 
 						<label className="event-create-field">
 							<span>Date*</span>
-							<input
-								type="date"
-								name="event_date"
-								value={form.event_date}
-								onChange={onChange}
-								aria-invalid={showValidation && Boolean(fieldErrors.event_date)}
-							/>
+							<input type="date" name="event_date" value={form.event_date} onChange={onChange} aria-invalid={showValidation && Boolean(fieldErrors.event_date)} />
 							{showValidation && fieldErrors.event_date && <span className="event-create-error">{fieldErrors.event_date}</span>}
 						</label>
 					</div>

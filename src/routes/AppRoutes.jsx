@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import DashboardPage from '../pages/Dashboard'
 import LoginPage from '../pages/Login'
 import MeetingPage from '../pages/Meeting'
+import InsightsPage from '../pages/Insights'
 import { showToast } from '../store/toast'
 
 function ProtectedRoute({ sessionChecked, children }) {
@@ -74,6 +75,14 @@ function AppRoutes({ sessionChecked }) {
         element={
           <ProtectedRoute sessionChecked={sessionChecked}>
             <MeetingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/insights"
+        element={
+          <ProtectedRoute sessionChecked={sessionChecked}>
+            <InsightsPage />
           </ProtectedRoute>
         }
       />

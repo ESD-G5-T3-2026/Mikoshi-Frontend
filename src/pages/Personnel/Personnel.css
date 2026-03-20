@@ -1,0 +1,33 @@
+.personnel-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 16px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  margin: 2px 0;
+}
+
+.personnel-btn:hover {
+  background: #1d4ed8;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.personnel-btn.remove {
+  background: #dc2626;
+}
+
+.personnel-btn.remove:hover {
+  background: #b91c1c;
+}
+
+td {
+    text-align: center;
+}
+
+.personnel-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

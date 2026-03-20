@@ -49,6 +49,9 @@ function Navbar({ user }) {
 					 <Link to="/meeting" className={location.pathname === "/meeting" ? "active" : ""}>
 						 Meetings
 					 </Link>
+					 <Link to="/personnel" className={location.pathname === "/personnel" ? "active" : ""}>
+						 Personnel
+					 </Link>
 				 </nav>
 			 </div>
 			 <div className="app-navbar-user-menu" ref={menuRef}>

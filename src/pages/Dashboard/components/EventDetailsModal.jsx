@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { showToast } from "../../../store/toast";
+import { addInsights } from "../../../services/insightsApi";
+
+const CREATE_INSIGHT_REQUEST = "insights/CREATE_INSIGHT_REQUEST";
+const CREATE_INSIGHT_SUCCESS = "insights/CREATE_INSIGHT_SUCCESS";
+const CREATE_INSIGHT_FAILURE = "insights/CREATE_INSIGHT_FAILURE";
 
 function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, onUpdateStatus, onUpdateEvent }) {
+	const dispatch = useDispatch();
+	const user = useSelector((state) => state.auth.user);
 	const [isEditingEvent, setIsEditingEvent] = useState(false);
 	const [showValidation, setShowValidation] = useState(false);
 	const [editForm, setEditForm] = useState({
@@ -10,6 +19,12 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		event_date: "",
 		event_desc: "",
 		remarks: "",
+	});
+	const [showInsightForm, setShowInsightForm] = useState(false);
+	const [insightForm, setInsightForm] = useState({
+		whatHappened: "",
+		whyHappened: "",
+		howToImprove: "",
 	});
 
 	useEffect(() => {
@@ -60,6 +75,40 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		if (fieldErrors.event_name || fieldErrors.event_type || fieldErrors.event_year || fieldErrors.event_date || fieldErrors.event_desc) return;
 		const isUpdated = await onUpdateEvent(event.id, editForm);
 		if (isUpdated) setIsEditingEvent(false);
+	};
+
+	const handleInsightFormChange = (e) => {
+		const { name, value } = e.target;
+		setInsightForm((prev) => ({ ...prev, [name]: value }));
+	};
+
+	const handleInsightSubmit = async (e) => {
+		e.preventDefault();
+		const payload = {
+			clubId: user?.club_id,
+			eventId: event.id,
+			body: insightForm,
+			status: "PUBLISHED",
+		};
+		try {
+			dispatch({ type: CREATE_INSIGHT_REQUEST });
+			await addInsights(payload);
+			setShowInsightForm(false);
+			setInsightForm({ whatHappened: "", whyHappened: "", howToImprove: "" });
+			onClose();
+			dispatch({ type: CREATE_INSIGHT_SUCCESS });
+			dispatch(showToast("Insight created successfully.", "success"));
+		} catch {
+			dispatch({ type: CREATE_INSIGHT_FAILURE });
+			dispatch(showToast("Insight creation failed.", "error"));
+		}
+	};
+
+	const handleInsightCancel = (e) => {
+		e.preventDefault();
+
+		setShowInsightForm(false);
+		setInsightForm({ whatHappened: "", whyHappened: "", howToImprove: "" });
 	};
 
 	return (
@@ -206,7 +255,69 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 									Complete
 								</button>
 							)}
+							{event.status === "Completed" && !showInsightForm && (
+								<button type="button" className="event-modal-action-btn event-modal-action-complete" onClick={() => setShowInsightForm(true)}>
+									Add Insight
+								</button>
+							)}
 						</div>
+						{showInsightForm && (
+							<form className="insight-form" onSubmit={handleInsightSubmit} style={{ marginTop: "1em" }}>
+								<h2>Add Remarks:</h2>
+								<div style={{ display: "flex", flexDirection: "column", gap: "0.5em" }}>
+									<div>
+										<label htmlFor="whatHappened" className="event-create-field">
+											What Happened
+											<input
+												type="text"
+												id="whatHappened"
+												name="whatHappened"
+												value={insightForm.whatHappened}
+												onChange={handleInsightFormChange}
+												required
+												style={{ width: "100%" }}
+											/>
+										</label>
+									</div>
+									<div>
+										<label htmlFor="whyHappened" className="event-create-field">
+											Why It Happened
+											<input
+												type="text"
+												id="whyHappened"
+												name="whyHappened"
+												value={insightForm.whyHappened}
+												onChange={handleInsightFormChange}
+												required
+												style={{ width: "100%" }}
+											/>
+										</label>
+									</div>
+									<div>
+										<label htmlFor="howToImprove" className="event-create-field">
+											How To Improve
+											<input
+												type="text"
+												id="howToImprove"
+												name="howToImprove"
+												value={insightForm.howToImprove}
+												onChange={handleInsightFormChange}
+												required
+												style={{ width: "100%" }}
+											/>
+										</label>
+									</div>
+								</div>
+								<div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5em", marginTop: "1em" }}>
+									<button type="submit" className="event-modal-action-btn event-modal-action-save" onClick={handleInsightSubmit}>
+										Submit
+									</button>
+									<button type="button" className="event-modal-action-btn event-modal-action-cancel" onClick={handleInsightCancel}>
+										Cancel
+									</button>
+								</div>
+							</form>
+						)}
 					</div>
 				)}
 			</div>

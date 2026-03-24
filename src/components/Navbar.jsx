@@ -40,7 +40,7 @@ function Navbar({ user }) {
 		 <header className="app-navbar">
 			 <div className="app-navbar-left">
 				 <Link to="/dashboard" className="app-navbar-brand">
-					 Clubify
+					 Mikoshi
 				 </Link>
 				 <nav className="app-navbar-links" aria-label="Main navigation">
 					 <Link to="/dashboard" className={location.pathname === "/dashboard" ? "active" : ""}>

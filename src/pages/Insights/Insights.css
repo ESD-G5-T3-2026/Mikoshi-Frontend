@@ -3,3 +3,23 @@
   margin: 0;
   display: block;
 }
+
+.textbox {
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 1em;
+    color: black;
+    margin-bottom: 8px;
+}
+
+.insight-card {
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+  background: darkgrey;
+  color: black;
+  box-shadow: 0 2px 6px rgba(25, 118, 210, 0.05);
+}

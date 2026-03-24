@@ -30,7 +30,7 @@ function LoginPage() {
   return (
     <main className="login-page">
       <div className="login-jumbotron">
-        <h1 className="jumbotron-title">Welcome to Clubify!</h1>
+        <h1 className="jumbotron-title">Welcome to Mikoshi!</h1>
         <p className="jumbotron-sub">Your all-in-one campus club platform</p>
       </div>
       <section className="login-card" aria-label="Login form">

@@ -40,7 +40,7 @@ function InsightsModal({ setIsInsightsModalOpen, sortedRows }) {
 							}}>
 							<input type="checkbox" checked={selectedInsightEvents.includes(row.id)} onChange={() => handleInsightCheckboxChange(row)} />
 							<span>
-								<strong>{row.name}</strong> ({row.year}) <br />
+								<strong>{row.name}</strong> ({row.year})<br />
 								<small>{row.datetime}</small>
 							</span>
 						</label>

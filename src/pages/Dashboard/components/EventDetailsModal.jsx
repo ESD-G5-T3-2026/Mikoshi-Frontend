@@ -1,11 +1,17 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { showToast } from "../../../store/toast";
-import { addInsights } from "../../../services/insightsApi";
+import { getInsights, addInsights, updateInsights } from "../../../services/insightsApi";
 
+const GET_INSIGHT_REQUEST = "insights/GET_INSIGHT_REQUEST";
+const GET_INSIGHT_SUCCESS = "insights/GET_INSIGHT_SUCCESS";
+const GET_INSIGHT_FAILURE = "insights/GET_INSIGHT_FAILURE";
 const CREATE_INSIGHT_REQUEST = "insights/CREATE_INSIGHT_REQUEST";
 const CREATE_INSIGHT_SUCCESS = "insights/CREATE_INSIGHT_SUCCESS";
 const CREATE_INSIGHT_FAILURE = "insights/CREATE_INSIGHT_FAILURE";
+const UPDATE_INSIGHT_REQUEST = "insights/UPDATE_INSIGHT_REQUEST";
+const UPDATE_INSIGHT_SUCCESS = "insights/UPDATE_INSIGHT_SUCCESS";
+const UPDATE_INSIGHT_FAILURE = "insights/UPDATE_INSIGHT_FAILURE";
 
 function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, onUpdateStatus, onUpdateEvent }) {
 	const dispatch = useDispatch();
@@ -21,6 +27,10 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		remarks: "",
 	});
 	const [showInsightForm, setShowInsightForm] = useState(false);
+	const [showInsightFormDisabled, setShowInsightFormDisabled] = useState(false)
+	const [insightId, setInsightId] = useState("")
+
+
 	const [insightForm, setInsightForm] = useState({
 		whatHappened: "",
 		whyHappened: "",
@@ -77,6 +87,24 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		if (isUpdated) setIsEditingEvent(false);
 	};
 
+	const handleOpenInsightForm = async () => {
+		try{
+			dispatch({ type: GET_INSIGHT_REQUEST });
+			const res = await getInsights(user.club_id, event.id);
+			dispatch({ type: GET_INSIGHT_SUCCESS });
+			if(res.length > 0){
+				setShowInsightFormDisabled(true)
+				setInsightForm(res[0].body)
+				setInsightId(res[0].id)
+			}else{
+				setShowInsightForm(true)
+			}
+		}catch{
+			dispatch({ type: GET_INSIGHT_FAILURE });
+			dispatch(showToast("Failed to retrieve insights. Reload and try again", "error"));
+		}
+	}
+
 	const handleInsightFormChange = (e) => {
 		const { name, value } = e.target;
 		setInsightForm((prev) => ({ ...prev, [name]: value }));
@@ -94,20 +122,46 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 			dispatch({ type: CREATE_INSIGHT_REQUEST });
 			await addInsights(payload);
 			setShowInsightForm(false);
+			setShowInsightFormDisabled(false);
 			setInsightForm({ whatHappened: "", whyHappened: "", howToImprove: "" });
-			onClose();
 			dispatch({ type: CREATE_INSIGHT_SUCCESS });
 			dispatch(showToast("Insight created successfully.", "success"));
+			onClose();
+
 		} catch {
 			dispatch({ type: CREATE_INSIGHT_FAILURE });
 			dispatch(showToast("Insight creation failed.", "error"));
 		}
 	};
 
+	const handleInsightUpdate = async (e) => {
+		e.preventDefault();
+		const payload = {
+			clubId: user?.club_id,
+			eventId: event.id,
+			body: insightForm,
+			status: "PUBLISHED",
+		};
+		try {
+			dispatch({ type: UPDATE_INSIGHT_REQUEST });
+			await updateInsights(insightId, user?.club_id, payload);
+			setShowInsightForm(false);
+			setShowInsightFormDisabled(false);
+			setInsightForm({ whatHappened: "", whyHappened: "", howToImprove: "" });
+			dispatch({ type: UPDATE_INSIGHT_SUCCESS });
+			dispatch(showToast("Insight updated successfully.", "success"));
+			onClose();
+
+		} catch {
+			dispatch({ type: UPDATE_INSIGHT_FAILURE });
+			dispatch(showToast("Insight update failed.", "error"));
+		}
+	};
+
 	const handleInsightCancel = (e) => {
 		e.preventDefault();
-
 		setShowInsightForm(false);
+		setShowInsightFormDisabled(false);
 		setInsightForm({ whatHappened: "", whyHappened: "", howToImprove: "" });
 	};
 
@@ -256,14 +310,14 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 								</button>
 							)}
 							{event.status === "Completed" && !showInsightForm && (
-								<button type="button" className="event-modal-action-btn event-modal-action-complete" onClick={() => setShowInsightForm(true)}>
+								<button type="button" className="event-modal-action-btn event-modal-action-complete" onClick={handleOpenInsightForm}>
 									Add Insight
 								</button>
 							)}
 						</div>
-						{showInsightForm && (
+						{showInsightForm || showInsightFormDisabled	 && (
 							<form className="insight-form" onSubmit={handleInsightSubmit} style={{ marginTop: "1em" }}>
-								<h2>Add Remarks:</h2>
+								{showInsightFormDisabled ? <h2>Past Remarks</h2> : <h2>Add Remarks:</h2>}
 								<div style={{ display: "flex", flexDirection: "column", gap: "0.5em" }}>
 									<div>
 										<label htmlFor="whatHappened" className="event-create-field">
@@ -309,7 +363,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 									</div>
 								</div>
 								<div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5em", marginTop: "1em" }}>
-									<button type="submit" className="event-modal-action-btn event-modal-action-save" onClick={handleInsightSubmit}>
+									<button type="submit" className="event-modal-action-btn event-modal-action-save" onClick={!showInsightFormDisabled ? handleInsightSubmit : handleInsightUpdate} disabled={!insightForm.howToImprove || !insightForm.whatHappened || !insightForm.whyHappened}>
 										Submit
 									</button>
 									<button type="button" className="event-modal-action-btn event-modal-action-cancel" onClick={handleInsightCancel}>

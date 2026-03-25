@@ -388,6 +388,8 @@ function DashboardPage() {
 		return `(${months} month${months === 1 ? "" : "s"})`;
 	};
 
+	const completedRows = sortedRows.filter(row => row.status === "Completed");
+
 	return (
 		<main className="dashboard-page">
 			<section className="dashboard-card" aria-label="Dashboard">
@@ -440,7 +442,7 @@ function DashboardPage() {
 					onChange={handleCreateEventChange}
 					onSubmit={handleCreateEventSubmit}
 				/>
-				{isInsightsModalOpen && <InsightsModal setIsInsightsModalOpen={setIsInsightsModalOpen} sortedRows={sortedRows} />}
+				{isInsightsModalOpen && <InsightsModal setIsInsightsModalOpen={setIsInsightsModalOpen} sortedRows={completedRows} />}
 			</section>
 		</main>
 	);

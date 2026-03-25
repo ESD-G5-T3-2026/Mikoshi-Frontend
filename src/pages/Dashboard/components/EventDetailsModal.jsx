@@ -165,8 +165,14 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		setInsightForm({ whatHappened: "", whyHappened: "", howToImprove: "" });
 	};
 
+	const handleClose = () => {
+    setShowInsightForm(false);
+    setShowInsightFormDisabled(false);
+    onClose();
+};
+
 	return (
-		<div className="event-modal-overlay" onClick={onClose} role="presentation">
+		<div className="event-modal-overlay" onClick={handleClose} role="presentation">
 			<div className="event-modal" role="dialog" aria-modal="true" aria-label="Event details" onClick={(e) => e.stopPropagation()}>
 				<div className="event-modal-header">
 					<h2>
@@ -178,7 +184,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 								✎
 							</button>
 						)}
-						<button type="button" className="event-modal-close" onClick={onClose} aria-label="Close event details">
+						<button type="button" className="event-modal-close" onClick={handleClose} aria-label="Close event details">
 							×
 						</button>
 					</div>
@@ -315,7 +321,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 								</button>
 							)}
 						</div>
-						{showInsightForm || showInsightFormDisabled	 && (
+						{(showInsightForm || showInsightFormDisabled) && (
 							<form className="insight-form" onSubmit={handleInsightSubmit} style={{ marginTop: "1em" }}>
 								{showInsightFormDisabled ? <h2>Past Remarks</h2> : <h2>Add Remarks:</h2>}
 								<div style={{ display: "flex", flexDirection: "column", gap: "0.5em" }}>

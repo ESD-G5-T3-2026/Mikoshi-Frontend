@@ -23,8 +23,8 @@ function InsightsPage() {
 			const fetchInsights = async () => {
 				dispatch({ type: SUMMARIZE_INSIGHTS_REQUEST });
 				try {
-					const response = await summarizeInsights({ clubId: user?.club_id, eventIds });
-					setInsights(response.data);
+					const response = await summarizeInsights({ clubId: user?.club_id, eventIds: [eventIds] });
+					setInsights(response);
 					dispatch({ type: SUMMARIZE_INSIGHTS_SUCCESS });
 				} catch {
 					dispatch({ type: SUMMARIZE_INSIGHTS_FAILURE });

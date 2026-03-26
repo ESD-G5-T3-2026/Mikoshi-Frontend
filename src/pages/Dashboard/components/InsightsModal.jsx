@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 function InsightsModal({ setIsInsightsModalOpen, sortedRows }) {
 	const [selectedInsightEvents, setSelectedInsightEvents] = useState([]);
 	const [selectedEventNames, setSelectedEventNames] = useState([]);
+	const [searchTerm, setSearchTerm] = useState("");
 
 	const handleInsightCheckboxChange = (event) => {
 		const eventKey = `${event.name} ${event.year}`;
@@ -17,6 +18,8 @@ function InsightsModal({ setIsInsightsModalOpen, sortedRows }) {
 		navigate("/insights", { state: { eventIds: selectedInsightEvents, eventNames: selectedEventNames } });
 	};
 
+	const filteredRows = sortedRows.filter((row) => row.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
 	return (
 		<div className="event-modal-overlay" onClick={() => setIsInsightsModalOpen(false)}>
 			<div className="event-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 500 }}>
@@ -26,8 +29,22 @@ function InsightsModal({ setIsInsightsModalOpen, sortedRows }) {
 						×
 					</button>
 				</div>
+				<div style={{ padding: "10px" }}>
+					<input
+						type="text"
+						placeholder="Search events..."
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+						style={{
+							width: "100%",
+							padding: "8px",
+							borderRadius: "6px",
+							border: "1px solid #ccc",
+						}}
+					/>
+				</div>
 				<div className="event-modal-content" style={{ maxHeight: "350px", overflowY: "auto" }}>
-					{sortedRows.map((row) => (
+					{filteredRows.map((row) => (
 						<label
 							key={row.id}
 							style={{

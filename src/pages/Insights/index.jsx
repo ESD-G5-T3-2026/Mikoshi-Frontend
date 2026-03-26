@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+import ReactMarkdown from "react-markdown";
+
 import "./Insights.css";
 import { summarizeInsights } from "../../services/insightsApi";
 import { showToast } from "../../store/toast";
@@ -23,7 +25,7 @@ function InsightsPage() {
 			const fetchInsights = async () => {
 				dispatch({ type: SUMMARIZE_INSIGHTS_REQUEST });
 				try {
-					const response = await summarizeInsights({ clubId: user?.club_id, eventIds: [eventIds] });
+					const response = await summarizeInsights({ clubId: user?.club_id, eventIds: eventIds });
 					setInsights(response);
 					dispatch({ type: SUMMARIZE_INSIGHTS_SUCCESS });
 				} catch {
@@ -46,10 +48,7 @@ function InsightsPage() {
 			</p>
 			{insights && (
 				<div className="insights-summary">
-					<h3>Summary Generated:</h3>
-					<div className="textbox" style={{ whiteSpace: "pre-wrap", marginBottom: "1em" }}>
-						{insights.summaryText}
-					</div>
+						<ReactMarkdown>{insights.summaryText}</ReactMarkdown>
 					<h3>Individual Details</h3>
 					{insights.insights.map((insight) => (
 						<div key={insight.id} className="insight-card">

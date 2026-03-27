@@ -38,7 +38,16 @@ function PersonnelDashboard() {
 	}, [user?.club_id, dispatch]);
 
 	const handleAdd = async () => {
-		if (!newName || !newMatricNo || !newTeleHandle || !newEmail || newTeleHandle.includes("@")) return;
+		if (!newName || !newMatricNo || !newTeleHandle || !newEmail ){
+			return
+		}else if (newTeleHandle.includes("@")){
+			dispatch(showToast("Tele Handle does not need '@'", "error"));
+		}else if (newMatricNo.length != 7){
+			dispatch(showToast("Matric Number Invalid", "error"));
+		}
+		else if (!newEmail.includes("@")){
+			dispatch(showToast("Not valid email", "error"));
+		};
 		const payload = {
 			name: newName,
 			matriculation_number: newMatricNo,
@@ -112,7 +121,7 @@ function PersonnelDashboard() {
 					) : (
 						personnel.map((person) => (
 							<tr key={person.id}>
-								<td>****{person.matriculation_number.toString().slice(4)}</td>
+								<td>****{person.matriculation_number.toString().padStart(7, "0").slice(4)}</td>
 								<td>{person.name}</td>
 								<td>{person.email}</td>
 								<td>@{person.telegram_handle}</td>

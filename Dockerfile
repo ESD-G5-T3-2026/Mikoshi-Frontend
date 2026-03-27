@@ -1,20 +1,33 @@
-# Use Node 20 LTS
-FROM node:20
+# Stage 1: build
+FROM node:20-slim AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy only package files first (to leverage caching)
-COPY package.json package-lock.json* ./
+# Copy package files
+COPY package*.json ./
 
-# Install dependencies cleanly
-RUN npm ci --omit=dev
+# Install all dependencies including devDependencies
+RUN npm ci
 
-# Copy the rest of the app
+# Copy all source code
 COPY . .
 
-# Expose Vite default dev port
+# Build the Vite app
+RUN npm run build
+
+# Stage 2: serve static files
+FROM node:20-slim
+
+WORKDIR /app
+
+# Install a small static server
+RUN npm install -g serve
+
+# Copy built files from builder
+COPY --from=builder /app/dist ./dist
+
+# Expose port
 EXPOSE 6620
 
-# Run Vite dev server
-CMD ["npm", "run", "dev"]
+# Serve static files
+CMD ["serve", "-s", "dist", "-l", "6620"]

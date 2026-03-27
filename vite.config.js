@@ -3,6 +3,14 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-plugins: [react()],
-server: { port: 6620 },
-})
+  server: {
+    host: true, // listen on all interfaces
+    port: 6620,
+    strictPort: true,
+    allowedHosts: [
+      'mikoshi.centralindia.cloudapp.azure.com', // your Azure hostname
+      '135.235.140.36',
+      '127.0.0.1'
+    ]
+  }
+});

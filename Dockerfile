@@ -1,13 +1,20 @@
-# Use official Node.js image as base
-FROM node:20-slim
+# Use Node 20 LTS
+FROM node:20
 
+# Set working directory
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install --omit=dev
+# Copy only package files first (to leverage caching)
+COPY package.json package-lock.json* ./
 
+# Install dependencies cleanly
+RUN npm ci --omit=dev
+
+# Copy the rest of the app
 COPY . .
 
+# Expose Vite default dev port
 EXPOSE 6620
 
+# Run Vite dev server
 CMD ["npm", "run", "dev"]

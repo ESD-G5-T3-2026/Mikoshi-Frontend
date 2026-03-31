@@ -14,4 +14,9 @@ export async function addPersonnelAssignment(payload) {
   return response.data
 }
 
+export async function deletePersonnelAssignment(assignmentId) {
+  const response = await apiClient.delete(`${PATH}/assignments/${assignmentId}`)
+  return response.data
+}
+
 

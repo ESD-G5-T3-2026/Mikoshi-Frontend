@@ -4,7 +4,7 @@ import { showToast } from "../../../store/toast";
 import { getInsights, addInsights, updateInsights } from "../../../services/insightsApi";
 import InsightsForm from "./InsightsForm";
 import { getPersonnel } from "../../../services/personnelApi";
-import { getPersonnelAssignment, addPersonnelAssignment } from "../../../services/personnelAssignmentApi";
+import { getPersonnelAssignment, addPersonnelAssignment, deletePersonnelAssignment } from "../../../services/personnelAssignmentApi";
 import { GET_PERSONNEL_FAILURE, GET_PERSONNEL_REQUEST, GET_PERSONNEL_SUCCESS } from "../../Personnel/index";
 
 const GET_INSIGHT_REQUEST = "insights/GET_INSIGHT_REQUEST";
@@ -20,6 +20,9 @@ const UPDATE_INSIGHT_FAILURE = "insights/UPDATE_INSIGHT_FAILURE";
 const CREATE_ASSIGNMENT_REQUEST = "assignments/CREATE_ASSIGNMENT_REQUEST";
 const CREATE_ASSIGNMENT_SUCCESS = "assignments/CREATE_ASSIGNMENT_SUCCESS";
 const CREATE_ASSIGNMENT_FAILURE = "assignments/CREATE_ASSIGNMENT_FAILURE";
+const DELETE_ASSIGNMENT_REQUEST = "assignments/DELETE_ASSIGNMENT_REQUEST";
+const DELETE_ASSIGNMENT_SUCCESS = "assignments/DELETE_ASSIGNMENT_SUCCESS";
+const DELETE_ASSIGNMENT_FAILURE = "assignments/DELETE_ASSIGNMENT_FAILURE";
 
 function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, onUpdateStatus, onUpdateEvent }) {
 	const dispatch = useDispatch();
@@ -147,7 +150,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		}));
 	};
 
-	const handlePersonnelAssignmentSubmit = async (e) => {
+	const handlePersonnelAssignmentSubmit = async () => {
 		const toApiFormat = (dt) => (dt ? dt + ":00+00:00" : "");
 		const payload = {
 			eventId: event.id,
@@ -176,6 +179,28 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		} catch {
 			dispatch({ type: CREATE_ASSIGNMENT_FAILURE });
 			dispatch(showToast("Assignment creation failed.", "error"));
+		}
+	};
+
+	const handlePersonnelAssignmentDelete = async (assignmentId) => {
+		
+		try {
+			dispatch({ type: DELETE_ASSIGNMENT_REQUEST });
+			await deletePersonnelAssignment(assignmentId);
+			setShowPersonnalForm(false);
+			setPersonnelForm({
+				personnel_id: null,
+				event_id: null,
+				job: "",
+				start_time: "",
+				end_time: "",
+			});
+			dispatch({ type: DELETE_ASSIGNMENT_SUCCESS });
+			dispatch(showToast("Assignment deleted successfully.", "success"));
+			onClose();
+		} catch {
+			dispatch({ type: DELETE_ASSIGNMENT_FAILURE });
+			dispatch(showToast("Assignment deletion failed.", "error"));
 		}
 	};
 
@@ -286,7 +311,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 			<div className="event-modal" role="dialog" aria-modal="true" aria-label="Event details" onClick={(e) => e.stopPropagation()}>
 				<div className="event-modal-header">
 					<h2>
-						{event.name} {event.year} ({event.status})
+						{event.name} {event.year} ({event.status}) 
 					</h2>
 					<div className="event-modal-header-actions">
 						{canShowPencil && !isEditingEvent && (
@@ -471,7 +496,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 													<td>{formatDateTime(assignment.start_time.replace("T", " ").slice(0, 16))}</td>
 													<td>{formatDateTime(assignment.end_time.replace("T", " ").slice(0, 16))}</td>
 													<td>
-														<button className="event-modal-action-btn event-modal-action-cancel" onClick={() => {}}>
+														<button className="event-modal-action-btn event-modal-action-cancel" onClick={() => handlePersonnelAssignmentDelete(assignment.id)}>
 															Remove
 														</button>
 													</td>

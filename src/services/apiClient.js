@@ -16,9 +16,8 @@ apiClient.interceptors.response.use(
     const status = error?.response?.status
 
     if (status === 401 || status === 403) {
-      const authError = new Error('Unauthorized access. Please log in again.')
-      authError.status = status
-      throw authError
+        window.location.href = "/login";
+        return Promise.reject(new Error('Unauthorized access. Please log in again.'));
     }
 
     throw error

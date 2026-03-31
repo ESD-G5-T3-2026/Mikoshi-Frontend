@@ -105,14 +105,14 @@ function PersonnelDashboard() {
 	return (
 		<div>
 			<h2>Personnel List</h2>
-			<table style={{ width: "100%", borderCollapse: "collapse" }}>
+			<table className="table-border table-border-compact">
 				<thead>
 					<tr>
-						<th style={{ borderBottom: "1px solid #ccc", textAlign: "left" }}>Matriculation No.</th>
-						<th style={{ borderBottom: "1px solid #ccc", textAlign: "left" }}>Name</th>
-						<th style={{ borderBottom: "1px solid #ccc", textAlign: "left" }}>Email</th>
-						<th style={{ borderBottom: "1px solid #ccc", textAlign: "left" }}>Tele Handle</th>
-						<th style={{ borderBottom: "1px solid #ccc" }}>Actions</th>
+						<th>Matriculation No.</th>
+						<th>Name</th>
+						<th>Email</th>
+						<th>Tele Handle</th>
+						<th>Actions</th>
 					</tr>
 				</thead>
 
@@ -137,18 +137,18 @@ function PersonnelDashboard() {
 						))
 					)}
 
-					<tr>
+					<tr className="last-row">
 						<td>
-							<input type="number" placeholder="Matriculation Number" value={newMatricNo} onChange={(e) => setNewMatricNo(e.target.value)} />
+							<input type="number" className="table-field-input" placeholder="Matriculation Number" value={newMatricNo} onChange={(e) => setNewMatricNo(e.target.value)} />
 						</td>
 						<td>
-							<input type="text" placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+							<input type="text" className="table-field-input" placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} />
 						</td>
 						<td>
-							<input type="email" placeholder="Email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
+							<input type="email" className="table-field-input" placeholder="Email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
 						</td>
 						<td>
-							<input type="text" placeholder="TeleHandle (No @)" value={newTeleHandle} onChange={(e) => setNewTeleHandle(e.target.value)} />
+							<input type="text" className="table-field-input" placeholder="TeleHandle (No @)" value={newTeleHandle} onChange={(e) => setNewTeleHandle(e.target.value)} />
 						</td>
 						<td>
 							<button className="personnel-btn" onClick={handleAdd} disabled={!newName || !newMatricNo || !newTeleHandle || !newEmail}>

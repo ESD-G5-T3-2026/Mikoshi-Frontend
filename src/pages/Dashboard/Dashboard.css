@@ -480,3 +480,64 @@ th {
   text-decoration: underline;
   cursor: pointer;
 }
+
+.table-field-input,
+.table-field-select,
+.table-field-textarea {
+  width: 80%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 0.75rem;
+  min-height: 30px;
+}
+
+.table-field-input[aria-invalid='true'],
+.table-field-textarea[aria-invalid='true'] {
+  border-color: #dc2626;
+}
+
+.table-field-textarea {
+  resize: vertical;
+  min-height: 48px;
+}
+
+.table-btn:hover,
+.table-btn-primary:hover,
+.table-btn-secondary:hover,
+.table-btn-delete:hover {
+  box-shadow: var(--shadow);
+}
+
+.table-btn-success {
+  border-radius: 8px;
+  font-size: 0.8rem;
+  padding: 3px 6px;
+  cursor: pointer;
+  background: #16a34a;
+  border-color: #15803d;
+  color: #fff;
+}
+
+.table-btn-warning {
+  border-radius: 8px;
+  font-size: 0.8rem;
+  padding: 3px 6px;
+  cursor: pointer;
+  background: #ca8a04;
+  border-color: #a16207;
+  color: #fff;
+}
+
+.table-btn-delete {
+  border-radius: 8px;
+  font-size: 0.8rem;
+  padding: 3px 6px;
+  cursor: pointer;
+  background: #dc2626;
+  border-color: #b91c1c;
+  color: #fff;
+}

@@ -1,33 +1,58 @@
 .personnel-btn {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 7px 16px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s, box-shadow 0.2s;
-  margin: 2px 0;
+	background: #2563eb;
+	color: #fff;
+	border: none;
+	border-radius: 6px;
+	padding: 7px 16px;
+	font-size: 1rem;
+	cursor: pointer;
+	transition:
+		background 0.2s,
+		box-shadow 0.2s;
+	margin: 2px 0;
 }
 
 .personnel-btn:hover {
-  background: #1d4ed8;
-  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+	background: #1d4ed8;
+	box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
 }
 
 .personnel-btn.remove {
-  background: #dc2626;
+	background: #dc2626;
 }
 
 .personnel-btn.remove:hover {
-  background: #b91c1c;
+	background: #b91c1c;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+th {
+	text-align: center;
+	border-left: 1px solid white;
+	border-right: 1px solid white;
 }
 
 td {
-    text-align: center;
+	border-left: 1px solid white;
+	border-right: 1px solid white;
+	text-align: center;
+  justify-items: center;
 }
 
 .personnel-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.last-row{
+  border-top:1px solid white;
+  border-bottom:1px solid white;
+}
+
+.last-row > td {
+  padding: 10px 0px 10px 0px;
 }

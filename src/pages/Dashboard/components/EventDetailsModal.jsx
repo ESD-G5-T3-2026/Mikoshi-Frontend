@@ -497,7 +497,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 													<td>{formatDateTime(assignment.start_time.replace("T", " ").slice(0, 16))}</td>
 													<td>{formatDateTime(assignment.end_time.replace("T", " ").slice(0, 16))}</td>
 													<td>
-														<button className="event-modal-action-cancel" onClick={() => handlePersonnelAssignmentDelete(assignment.id)}>
+														<button className="table-btn-delete" onClick={() => handlePersonnelAssignmentDelete(assignment.id)}>
 															Remove
 														</button>
 													</td>
@@ -507,7 +507,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 										{personnelForms.map((form, idx) => (
 											<tr key={idx}>
 												<td>
-													<select name="personnel_id" value={form.personnel_id || ""} onChange={(e) => handlePersonnelFormChange(idx, e)}>
+													<select name="personnel_id" className="table-field-select" value={form.personnel_id || ""} onChange={(e) => handlePersonnelFormChange(idx, e)}>
 														{personnel.map((p) => (
 															<option key={p.id} value={p.id}>
 																{p.name}
@@ -516,12 +516,13 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 													</select>
 												</td>
 												<td>
-													<input type="text" name="job" placeholder="Job" value={form.job || ""} onChange={(e) => handlePersonnelFormChange(idx, e)} />
+													<input type="text" name="job" className="table-field-input" placeholder="Job" value={form.job || ""} onChange={(e) => handlePersonnelFormChange(idx, e)} />
 												</td>
 												<td>
 													<input
 														type="datetime-local"
 														name="start_time"
+														className="table-field-input" 
 														placeholder="Start Time"
 														value={form.start_time || ""}
 														onChange={(e) => handlePersonnelFormChange(idx, e)}
@@ -531,13 +532,14 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 													<input
 														type="datetime-local"
 														name="end_time"
+														className="table-field-input" 
 														placeholder="End Time"
 														value={form.end_time || ""}
 														onChange={(e) => handlePersonnelFormChange(idx, e)}
 													/>
 												</td>
 												<td>
-													<button type="button" onClick={() => removePersonnelFormRow(idx)}>
+													<button type="button" className="table-btn-warning" onClick={() => removePersonnelFormRow(idx)}>
 														Undo
 													</button>
 												</td>
@@ -545,12 +547,12 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 										))}
 										<tr>
 											<td colSpan={4}>
-												<button type="button" onClick={addPersonnelFormRow}>
+												<button type="button" className="table-btn-warning" onClick={addPersonnelFormRow}>
 													Add Row
 												</button>
 											</td>
 											<td >
-												<button type="button" className="event-modal-action-complete" onClick={handlePersonnelAssignmentSubmit}>
+												<button type="button" className="table-btn-success" onClick={handlePersonnelAssignmentSubmit}>
 													Submit
 												</button>
 											</td>

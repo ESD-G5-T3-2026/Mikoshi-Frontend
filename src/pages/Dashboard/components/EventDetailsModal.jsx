@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { showToast } from "../../../store/toast";
 import { getInsights, addInsights, updateInsights } from "../../../services/insightsApi";
+import InsightsForm from "./InsightsForm";
+import { getPersonnel } from "../../../services/personnelApi";
+import { getPersonnelAssignment, addPersonnelAssignment } from "../../../services/personnelAssignmentApi";
+import { GET_PERSONNEL_FAILURE, GET_PERSONNEL_REQUEST, GET_PERSONNEL_SUCCESS } from "../../Personnel/index";
 
 const GET_INSIGHT_REQUEST = "insights/GET_INSIGHT_REQUEST";
 const GET_INSIGHT_SUCCESS = "insights/GET_INSIGHT_SUCCESS";
@@ -12,6 +16,10 @@ const CREATE_INSIGHT_FAILURE = "insights/CREATE_INSIGHT_FAILURE";
 const UPDATE_INSIGHT_REQUEST = "insights/UPDATE_INSIGHT_REQUEST";
 const UPDATE_INSIGHT_SUCCESS = "insights/UPDATE_INSIGHT_SUCCESS";
 const UPDATE_INSIGHT_FAILURE = "insights/UPDATE_INSIGHT_FAILURE";
+
+const CREATE_ASSIGNMENT_REQUEST = "assignments/CREATE_ASSIGNMENT_REQUEST";
+const CREATE_ASSIGNMENT_SUCCESS = "assignments/CREATE_ASSIGNMENT_SUCCESS";
+const CREATE_ASSIGNMENT_FAILURE = "assignments/CREATE_ASSIGNMENT_FAILURE";
 
 function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, onUpdateStatus, onUpdateEvent }) {
 	const dispatch = useDispatch();
@@ -27,14 +35,22 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		remarks: "",
 	});
 	const [showInsightForm, setShowInsightForm] = useState(false);
-	const [showInsightFormDisabled, setShowInsightFormDisabled] = useState(false)
-	const [insightId, setInsightId] = useState("")
-
-
+	const [showInsightFormDisabled, setShowInsightFormDisabled] = useState(false);
+	const [insightId, setInsightId] = useState("");
 	const [insightForm, setInsightForm] = useState({
 		whatHappened: "",
 		whyHappened: "",
 		howToImprove: "",
+	});
+
+	const [showPersonnelForm, setShowPersonnalForm] = useState(false);
+	const [personnel, setPersonnel] = useState([]);
+	const [personnelFormData, setPersonnelFormData] = useState([]);
+	const [personnelForm, setPersonnelForm] = useState({
+		personnel_id: null,
+		job: "",
+		start_time: "",
+		end_time: "",
 	});
 
 	useEffect(() => {
@@ -87,23 +103,111 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		if (isUpdated) setIsEditingEvent(false);
 	};
 
+	const handleOpenAssignmentForm = async () => {
+		try {
+			dispatch({ type: GET_PERSONNEL_REQUEST });
+			const personnel = await getPersonnel(user.club_id);
+			const personnelAssignment = await getPersonnelAssignment(event.id);
+			dispatch({ type: GET_PERSONNEL_SUCCESS });
+			if (personnel.data.length > 0) {
+				setPersonnel(personnel.data);
+			}
+			if (personnelAssignment.count > 0) {
+				setPersonnelFormData(personnelAssignment.data.sort((a, b) => a.personnel_id - b.personnel_id));
+			}
+			let defaultDateTime = "";
+			if (event.datetime) {
+				defaultDateTime = event.datetime.replace(" ", "T").slice(0, 16);
+			}
+
+			setPersonnelForm({
+				personnel_id: null,
+				job: "",
+				start_time: defaultDateTime,
+				end_time: defaultDateTime,
+			});
+			setShowPersonnalForm(true);
+		} catch {
+			dispatch({ type: GET_PERSONNEL_FAILURE });
+			dispatch(showToast("Failed to retrieve personnel and assignments. Reload and try again", "error"));
+		}
+	};
+
+	const handlePersonnelAssignmentFormChange = (e) => {
+		const { name, value } = e.target;
+		let newValue = value;
+
+		if (name === "personnel_id") {
+			newValue = Number(value);
+		}
+
+		setPersonnelForm((prev) => ({
+			...prev,
+			[name]: newValue,
+		}));
+	};
+
+	const handlePersonnelAssignmentSubmit = async (e) => {
+		const toApiFormat = (dt) => (dt ? dt + ":00+00:00" : "");
+		const payload = {
+			eventId: event.id,
+			assignments: [
+				{
+					...personnelForm,
+					start_time: toApiFormat(personnelForm.start_time),
+					end_time: toApiFormat(personnelForm.end_time),
+				},
+			],
+		};
+		try {
+			dispatch({ type: CREATE_ASSIGNMENT_REQUEST });
+			await addPersonnelAssignment(payload);
+			setShowPersonnalForm(false);
+			setPersonnelForm({
+				personnel_id: null,
+				event_id: null,
+				job: "",
+				start_time: "",
+				end_time: "",
+			});
+			dispatch({ type: CREATE_ASSIGNMENT_SUCCESS });
+			dispatch(showToast("Assignment created successfully.", "success"));
+			onClose();
+		} catch {
+			dispatch({ type: CREATE_ASSIGNMENT_FAILURE });
+			dispatch(showToast("Assignment creation failed.", "error"));
+		}
+	};
+
+	const handlePersonnelAssignmentCancel = (e) => {
+		e.preventDefault();
+		setShowPersonnalForm(false);
+		setPersonnelForm({
+			personnel_id: null,
+			event_id: null,
+			job: "",
+			start_time: "",
+			end_time: "",
+		});
+	};
+
 	const handleOpenInsightForm = async () => {
-		try{
+		try {
 			dispatch({ type: GET_INSIGHT_REQUEST });
 			const res = await getInsights(user.club_id, event.id);
 			dispatch({ type: GET_INSIGHT_SUCCESS });
-			if(res.length > 0){
-				setShowInsightFormDisabled(true)
-				setInsightForm(res[0].body)
-				setInsightId(res[0].id)
-			}else{
-				setShowInsightForm(true)
+			if (res.length > 0) {
+				setShowInsightFormDisabled(true);
+				setInsightForm(res[0].body);
+				setInsightId(res[0].id);
+			} else {
+				setShowInsightForm(true);
 			}
-		}catch{
+		} catch {
 			dispatch({ type: GET_INSIGHT_FAILURE });
 			dispatch(showToast("Failed to retrieve insights. Reload and try again", "error"));
 		}
-	}
+	};
 
 	const handleInsightFormChange = (e) => {
 		const { name, value } = e.target;
@@ -127,7 +231,6 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 			dispatch({ type: CREATE_INSIGHT_SUCCESS });
 			dispatch(showToast("Insight created successfully.", "success"));
 			onClose();
-
 		} catch {
 			dispatch({ type: CREATE_INSIGHT_FAILURE });
 			dispatch(showToast("Insight creation failed.", "error"));
@@ -151,7 +254,6 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 			dispatch({ type: UPDATE_INSIGHT_SUCCESS });
 			dispatch(showToast("Insight updated successfully.", "success"));
 			onClose();
-
 		} catch {
 			dispatch({ type: UPDATE_INSIGHT_FAILURE });
 			dispatch(showToast("Insight update failed.", "error"));
@@ -166,10 +268,18 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 	};
 
 	const handleClose = () => {
-    setShowInsightForm(false);
-    setShowInsightFormDisabled(false);
-    onClose();
-};
+		setShowInsightForm(false);
+		setShowInsightFormDisabled(false);
+		setShowPersonnalForm(false);
+		onClose();
+		setPersonnelForm({
+			personnel_id: null,
+			event_id: null,
+			job: "",
+			start_time: "",
+			end_time: "",
+		});
+	};
 
 	return (
 		<div className="event-modal-overlay" onClick={handleClose} role="presentation">
@@ -310,10 +420,15 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 									</button>
 								</>
 							)}
-							{event.status === "Active" && (
-								<button type="button" className="event-modal-action-btn event-modal-action-complete" onClick={() => onUpdateStatus(event.id, "Completed")}>
-									Complete
-								</button>
+							{event.status === "Active" && !showPersonnelForm && (
+								<>
+									<button type="button" className="event-modal-action-btn event-modal-action-active" onClick={handleOpenAssignmentForm}>
+										Assign Personnel
+									</button>
+									<button type="button" className="event-modal-action-btn event-modal-action-complete" onClick={() => onUpdateStatus(event.id, "Completed")}>
+										Complete
+									</button>
+								</>
 							)}
 							{event.status === "Completed" && !showInsightForm && (
 								<button type="button" className="event-modal-action-btn event-modal-action-complete" onClick={handleOpenInsightForm}>
@@ -321,62 +436,89 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 								</button>
 							)}
 						</div>
-						{(showInsightForm || showInsightFormDisabled) && (
-							<form className="insight-form" onSubmit={handleInsightSubmit} style={{ marginTop: "1em" }}>
-								{showInsightFormDisabled ? <h2>Past Remarks</h2> : <h2>Add Remarks:</h2>}
-								<div style={{ display: "flex", flexDirection: "column", gap: "0.5em" }}>
-									<div>
-										<label htmlFor="whatHappened" className="event-create-field">
-											What Happened
-											<input
-												type="text"
-												id="whatHappened"
-												name="whatHappened"
-												value={insightForm.whatHappened}
-												onChange={handleInsightFormChange}
-												required
-												style={{ width: "100%" }}
-											/>
-										</label>
-									</div>
-									<div>
-										<label htmlFor="whyHappened" className="event-create-field">
-											Why It Happened
-											<input
-												type="text"
-												id="whyHappened"
-												name="whyHappened"
-												value={insightForm.whyHappened}
-												onChange={handleInsightFormChange}
-												required
-												style={{ width: "100%" }}
-											/>
-										</label>
-									</div>
-									<div>
-										<label htmlFor="howToImprove" className="event-create-field">
-											How To Improve
-											<input
-												type="text"
-												id="howToImprove"
-												name="howToImprove"
-												value={insightForm.howToImprove}
-												onChange={handleInsightFormChange}
-												required
-												style={{ width: "100%" }}
-											/>
-										</label>
-									</div>
-								</div>
-								<div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5em", marginTop: "1em" }}>
-									<button type="submit" className="event-modal-action-btn event-modal-action-save" onClick={!showInsightFormDisabled ? handleInsightSubmit : handleInsightUpdate} disabled={!insightForm.howToImprove || !insightForm.whatHappened || !insightForm.whyHappened}>
-										Submit
-									</button>
-									<button type="button" className="event-modal-action-btn event-modal-action-cancel" onClick={handleInsightCancel}>
-										Cancel
-									</button>
-								</div>
-							</form>
+						<InsightsForm
+							show={showInsightForm || showInsightFormDisabled}
+							activeForm={showInsightForm}
+							insightForm={insightForm}
+							handleInsightUpdate={handleInsightUpdate}
+							handleInsightCancel={handleInsightCancel}
+							handleInsightSubmit={handleInsightSubmit}
+							handleInsightFormChange={handleInsightFormChange}
+						/>
+						{showPersonnelForm && (
+							<>
+								<table style={{ width: "100%", marginTop: "1rem", borderCollapse: "collapse" }}>
+									<thead>
+										<tr>
+											<th style={{ borderBottom: "1px solid #ccc", textAlign: "center" }}>Assigned</th>
+											<th style={{ borderBottom: "1px solid #ccc", textAlign: "center" }}>Job</th>
+											<th style={{ borderBottom: "1px solid #ccc", textAlign: "center" }}>Start Time</th>
+											<th style={{ borderBottom: "1px solid #ccc", textAlign: "center" }}>End Time</th>
+											<td style={{ borderBottom: "1px solid #ccc", textAlign: "center" }}>
+												<button className="event-modal-action-btn event-modal-action-active" onClick={handlePersonnelAssignmentCancel}>
+													Cancel
+												</button>
+											</td>
+										</tr>
+									</thead>
+									<tbody>
+										{personnelFormData.map((assignment) => {
+											const person = personnel.find((p) => p.id === assignment.personnel_id);
+											return (
+												<tr key={assignment.id}>
+													<td>{person ? person.name : assignment.personnel_id}</td>
+													<td>{assignment.job}</td>
+													<td>{formatDateTime(assignment.start_time.replace("T", " ").slice(0, 16))}</td>
+													<td>{formatDateTime(assignment.end_time.replace("T", " ").slice(0, 16))}</td>
+													<td>
+														<button className="event-modal-action-btn event-modal-action-cancel" onClick={() => {}}>
+															Remove
+														</button>
+													</td>
+												</tr>
+											);
+										})}
+										<tr>
+											<td>
+												<select name="personnel_id" value={personnelForm.personnel_id || ""} onChange={handlePersonnelAssignmentFormChange}>
+													<option value="" disabled>
+														Select Personnel
+													</option>
+													{personnel.map((p) => (
+														<option key={p.id} value={p.id}>
+															{p.name}
+														</option>
+													))}
+												</select>
+											</td>
+											<td>
+												<input type="text" name="job" placeholder="Job" value={personnelForm.job} onChange={handlePersonnelAssignmentFormChange} />
+											</td>
+											<td>
+												<input
+													type="datetime-local"
+													name="start_time"
+													placeholder="Start Time"
+													value={personnelForm.start_time}
+													onChange={handlePersonnelAssignmentFormChange}
+												/>
+											</td>
+											<td>
+												<input type="datetime-local" name="end_time" placeholder="End Time" value={personnelForm.end_time} onChange={handlePersonnelAssignmentFormChange} />
+											</td>
+											<td>
+												<button
+													className="event-modal-action-btn event-modal-action-complete"
+													onClick={handlePersonnelAssignmentSubmit}
+													disabled={!personnelForm.personnel_id || !personnelForm.job || !personnelForm.start_time || !personnelForm.end_time}>
+													Assign
+												</button>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+								<form className="personnel-assignment-form" onSubmit={handlePersonnelAssignmentSubmit}></form>
+							</>
 						)}
 					</div>
 				)}

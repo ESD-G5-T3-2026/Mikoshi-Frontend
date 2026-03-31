@@ -4,9 +4,9 @@ import "./Personnel.css";
 import { getPersonnel, addPersonnel, removePersonnel } from "../../services/personnelApi";
 import { showToast } from "../../store/toast";
 
-const GET_PERSONNEL_REQUEST = "personnel/GET_PERSONNEL_REQUEST";
-const GET_PERSONNEL_SUCCESS = "personnel/GET_PERSONNEL_SUCCESS";
-const GET_PERSONNEL_FAILURE = "personnel/GET_PERSONNEL_FAILURE";
+export const GET_PERSONNEL_REQUEST = "personnel/GET_PERSONNEL_REQUEST";
+export const GET_PERSONNEL_SUCCESS = "personnel/GET_PERSONNEL_SUCCESS";
+export const GET_PERSONNEL_FAILURE = "personnel/GET_PERSONNEL_FAILURE";
 const CREATE_PERSONNEL_REQUEST = "personnel/CREATE_PERSONNEL_REQUEST";
 const CREATE_PERSONNEL_SUCCESS = "personnel/CREATE_PERSONNEL_SUCCESS";
 const CREATE_PERSONNEL_FAILURE = "personnel/CREATE_PERSONNEL_FAILURE";
@@ -32,7 +32,7 @@ function PersonnelDashboard() {
 				setPersonnel(response.data);
 				dispatch({ type: GET_PERSONNEL_SUCCESS });
 			})
-			.catch((_) => {
+			.catch(() => {
 				dispatch({ type: GET_PERSONNEL_FAILURE });
 			});
 	}, [user?.club_id, dispatch]);

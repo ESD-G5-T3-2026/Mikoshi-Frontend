@@ -42,11 +42,14 @@ function PersonnelDashboard() {
 			return
 		}else if (newTeleHandle.includes("@")){
 			dispatch(showToast("Tele Handle does not need '@'", "error"));
+			return
 		}else if (newMatricNo.length != 7){
 			dispatch(showToast("Matric Number Invalid", "error"));
+			return
 		}
 		else if (!newEmail.includes("@")){
 			dispatch(showToast("Not valid email", "error"));
+			return
 		};
 		const payload = {
 			name: newName,

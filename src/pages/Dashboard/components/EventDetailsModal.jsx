@@ -475,15 +475,13 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 								<table style={{ width: "100%", marginTop: "1rem", borderCollapse: "collapse" }}>
 									<thead>
 										<tr>
-											<th style={{ borderBottom: "1px solid #ccc", textAlign: "center" }}>Assigned</th>
-											<th style={{ borderBottom: "1px solid #ccc", textAlign: "center" }}>Job</th>
-											<th style={{ borderBottom: "1px solid #ccc", textAlign: "center" }}>Start Time</th>
-											<th style={{ borderBottom: "1px solid #ccc", textAlign: "center" }}>End Time</th>
-											<td style={{ borderBottom: "1px solid #ccc", textAlign: "center" }}>
-												<button className="event-modal-action-btn event-modal-action-active" onClick={handlePersonnelAssignmentCancel}>
+											<th>Assigned</th>
+											<th>Job</th>
+											<th>Start Time</th>
+											<th>End Time</th>
+											<th className="cancel-pointer" onClick={handlePersonnelAssignmentCancel}>
 													Cancel
-												</button>
-											</td>
+											</th>
 										</tr>
 									</thead>
 									<tbody>

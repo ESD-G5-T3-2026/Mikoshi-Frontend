@@ -470,3 +470,13 @@
     grid-template-columns: 1fr;
   }
 }
+
+th {
+  border-bottom: "1px solid #ccc";
+  text-align: "center"
+}
+
+.cancel-pointer {
+  text-decoration: underline;
+  cursor: pointer;
+}

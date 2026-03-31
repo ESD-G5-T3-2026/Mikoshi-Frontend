@@ -49,12 +49,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 	const [showPersonnelForm, setShowPersonnalForm] = useState(false);
 	const [personnel, setPersonnel] = useState([]);
 	const [personnelFormData, setPersonnelFormData] = useState([]);
-	const [personnelForm, setPersonnelForm] = useState({
-		personnel_id: null,
-		job: "",
-		start_time: "",
-		end_time: "",
-	});
+	const [personnelForms, setPersonnelForms] = useState([{ personnel_id: null, job: "", start_time: "", end_time: "" }]);
 
 	useEffect(() => {
 		if (!event) {
@@ -123,12 +118,12 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 				defaultDateTime = event.datetime.replace(" ", "T").slice(0, 16);
 			}
 
-			setPersonnelForm({
+			setPersonnelForms([{
 				personnel_id: null,
 				job: "",
 				start_time: defaultDateTime,
 				end_time: defaultDateTime,
-			});
+			}]);
 			setShowPersonnalForm(true);
 		} catch {
 			dispatch({ type: GET_PERSONNEL_FAILURE });
@@ -136,43 +131,48 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		}
 	};
 
-	const handlePersonnelAssignmentFormChange = (e) => {
+	const handlePersonnelFormChange = (idx, e) => {
 		const { name, value } = e.target;
-		let newValue = value;
+		setPersonnelForms((forms) => forms.map((form, i) => (i === idx ? { ...form, [name]: name === "personnel_id" ? Number(value) : value } : form)));
+	};
 
-		if (name === "personnel_id") {
-			newValue = Number(value);
-		}
+	const addPersonnelFormRow = () => {
+		let defaultDateTime = "";
 
-		setPersonnelForm((prev) => ({
-			...prev,
-			[name]: newValue,
-		}));
+		if (event.datetime) {
+				defaultDateTime = event.datetime.replace(" ", "T").slice(0, 16);
+			}
+		setPersonnelForms((forms) => [...forms, { personnel_id: null, job: "", start_time: defaultDateTime, end_time: defaultDateTime }]);
+	};
+
+	const removePersonnelFormRow = (idx) => {
+		setPersonnelForms((forms) => forms.filter((_, i) => i !== idx));
 	};
 
 	const handlePersonnelAssignmentSubmit = async () => {
-		const toApiFormat = (dt) => (dt ? dt + ":00+00:00" : "");
+		const toApiFormat = (dt) => (dt ? dt + ":00+08:00" : "");
 		const payload = {
 			eventId: event.id,
-			assignments: [
-				{
-					...personnelForm,
-					start_time: toApiFormat(personnelForm.start_time),
-					end_time: toApiFormat(personnelForm.end_time),
-				},
-			],
+			eventName: event.name,
+			assignments: personnelForms.map((form) => ({
+				...form,
+				start_time: toApiFormat(form.start_time),
+				end_time: toApiFormat(form.end_time),
+			})),
 		};
 		try {
 			dispatch({ type: CREATE_ASSIGNMENT_REQUEST });
 			await addPersonnelAssignment(payload);
 			setShowPersonnalForm(false);
-			setPersonnelForm({
-				personnel_id: null,
-				event_id: null,
-				job: "",
-				start_time: "",
-				end_time: "",
-			});
+			setPersonnelForms([
+				{
+					personnel_id: null,
+					event_id: null,
+					job: "",
+					start_time: "",
+					end_time: "",
+				},
+			]);
 			dispatch({ type: CREATE_ASSIGNMENT_SUCCESS });
 			dispatch(showToast("Assignment created successfully.", "success"));
 			onClose();
@@ -183,21 +183,22 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 	};
 
 	const handlePersonnelAssignmentDelete = async (assignmentId) => {
-		
 		try {
 			dispatch({ type: DELETE_ASSIGNMENT_REQUEST });
 			await deletePersonnelAssignment(assignmentId);
 			setShowPersonnalForm(false);
-			setPersonnelForm({
-				personnel_id: null,
-				event_id: null,
-				job: "",
-				start_time: "",
-				end_time: "",
-			});
+			setPersonnelForms([
+				{
+					personnel_id: null,
+					event_id: null,
+					job: "",
+					start_time: "",
+					end_time: "",
+				},
+			]);
 			dispatch({ type: DELETE_ASSIGNMENT_SUCCESS });
 			dispatch(showToast("Assignment deleted successfully.", "success"));
-			onClose();
+			// onClose();
 		} catch {
 			dispatch({ type: DELETE_ASSIGNMENT_FAILURE });
 			dispatch(showToast("Assignment deletion failed.", "error"));
@@ -207,13 +208,15 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 	const handlePersonnelAssignmentCancel = (e) => {
 		e.preventDefault();
 		setShowPersonnalForm(false);
-		setPersonnelForm({
-			personnel_id: null,
-			event_id: null,
-			job: "",
-			start_time: "",
-			end_time: "",
-		});
+		setPersonnelForms([
+			{
+				personnel_id: null,
+				event_id: null,
+				job: "",
+				start_time: "",
+				end_time: "",
+			},
+		]);
 	};
 
 	const handleOpenInsightForm = async () => {
@@ -297,13 +300,13 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		setShowInsightFormDisabled(false);
 		setShowPersonnalForm(false);
 		onClose();
-		setPersonnelForm({
+		setPersonnelForms([{
 			personnel_id: null,
 			event_id: null,
 			job: "",
 			start_time: "",
 			end_time: "",
-		});
+		}]);
 	};
 
 	return (
@@ -311,7 +314,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 			<div className="event-modal" role="dialog" aria-modal="true" aria-label="Event details" onClick={(e) => e.stopPropagation()}>
 				<div className="event-modal-header">
 					<h2>
-						{event.name} {event.year} ({event.status}) 
+						{event.name} {event.year} ({event.status})
 					</h2>
 					<div className="event-modal-header-actions">
 						{canShowPencil && !isEditingEvent && (
@@ -480,7 +483,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 											<th>Start Time</th>
 											<th>End Time</th>
 											<th className="cancel-pointer" onClick={handlePersonnelAssignmentCancel}>
-													Cancel
+												Cancel
 											</th>
 										</tr>
 									</thead>
@@ -494,53 +497,67 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 													<td>{formatDateTime(assignment.start_time.replace("T", " ").slice(0, 16))}</td>
 													<td>{formatDateTime(assignment.end_time.replace("T", " ").slice(0, 16))}</td>
 													<td>
-														<button className="event-modal-action-btn event-modal-action-cancel" onClick={() => handlePersonnelAssignmentDelete(assignment.id)}>
+														<button className="event-modal-action-cancel" onClick={() => handlePersonnelAssignmentDelete(assignment.id)}>
 															Remove
 														</button>
 													</td>
 												</tr>
 											);
 										})}
+										{personnelForms.map((form, idx) => (
+											<tr key={idx}>
+												<td>
+													<select name="personnel_id" value={form.personnel_id || ""} onChange={(e) => handlePersonnelFormChange(idx, e)}>
+														{personnel.map((p) => (
+															<option key={p.id} value={p.id}>
+																{p.name}
+															</option>
+														))}
+													</select>
+												</td>
+												<td>
+													<input type="text" name="job" placeholder="Job" value={form.job || ""} onChange={(e) => handlePersonnelFormChange(idx, e)} />
+												</td>
+												<td>
+													<input
+														type="datetime-local"
+														name="start_time"
+														placeholder="Start Time"
+														value={form.start_time || ""}
+														onChange={(e) => handlePersonnelFormChange(idx, e)}
+													/>
+												</td>
+												<td>
+													<input
+														type="datetime-local"
+														name="end_time"
+														placeholder="End Time"
+														value={form.end_time || ""}
+														onChange={(e) => handlePersonnelFormChange(idx, e)}
+													/>
+												</td>
+												<td>
+													<button type="button" onClick={() => removePersonnelFormRow(idx)}>
+														Undo
+													</button>
+												</td>
+											</tr>
+										))}
 										<tr>
-											<td>
-												<select name="personnel_id" value={personnelForm.personnel_id || ""} onChange={handlePersonnelAssignmentFormChange}>
-													<option value="" disabled>
-														Select Personnel
-													</option>
-													{personnel.map((p) => (
-														<option key={p.id} value={p.id}>
-															{p.name}
-														</option>
-													))}
-												</select>
+											<td colSpan={4}>
+												<button type="button" onClick={addPersonnelFormRow}>
+													Add Row
+												</button>
 											</td>
-											<td>
-												<input type="text" name="job" placeholder="Job" value={personnelForm.job} onChange={handlePersonnelAssignmentFormChange} />
-											</td>
-											<td>
-												<input
-													type="datetime-local"
-													name="start_time"
-													placeholder="Start Time"
-													value={personnelForm.start_time}
-													onChange={handlePersonnelAssignmentFormChange}
-												/>
-											</td>
-											<td>
-												<input type="datetime-local" name="end_time" placeholder="End Time" value={personnelForm.end_time} onChange={handlePersonnelAssignmentFormChange} />
-											</td>
-											<td>
-												<button
-													className="event-modal-action-btn event-modal-action-complete"
-													onClick={handlePersonnelAssignmentSubmit}
-													disabled={!personnelForm.personnel_id || !personnelForm.job || !personnelForm.start_time || !personnelForm.end_time}>
-													Assign
+											<td >
+												<button type="button" className="event-modal-action-complete" onClick={handlePersonnelAssignmentSubmit}>
+													Submit
 												</button>
 											</td>
 										</tr>
 									</tbody>
 								</table>
-								<form className="personnel-assignment-form" onSubmit={handlePersonnelAssignmentSubmit}></form>
+								<form className="personnel-assignment-form"></form>
 							</>
 						)}
 					</div>

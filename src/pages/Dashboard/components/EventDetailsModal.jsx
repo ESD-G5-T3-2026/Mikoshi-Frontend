@@ -152,8 +152,8 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 	const handlePersonnelAssignmentSubmit = async () => {
 		const toApiFormat = (dt) => (dt ? dt + ":00+08:00" : "");
 		const payload = {
-			eventId: event.id,
-			eventName: event.name,
+			event_id: event.id,
+			event_name: event.name,
 			assignments: personnelForms.map((form) => ({
 				...form,
 				start_time: toApiFormat(form.start_time),

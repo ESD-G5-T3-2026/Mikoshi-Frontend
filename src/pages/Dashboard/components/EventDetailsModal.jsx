@@ -118,12 +118,14 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 				defaultDateTime = event.datetime.replace(" ", "T").slice(0, 16);
 			}
 
-			setPersonnelForms([{
-				personnel_id: null,
-				job: "",
-				start_time: defaultDateTime,
-				end_time: defaultDateTime,
-			}]);
+			setPersonnelForms([
+				{
+					personnel_id: null,
+					job: "",
+					start_time: defaultDateTime,
+					end_time: defaultDateTime,
+				},
+			]);
 			setShowPersonnalForm(true);
 		} catch {
 			dispatch({ type: GET_PERSONNEL_FAILURE });
@@ -140,8 +142,8 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		let defaultDateTime = "";
 
 		if (event.datetime) {
-				defaultDateTime = event.datetime.replace(" ", "T").slice(0, 16);
-			}
+			defaultDateTime = event.datetime.replace(" ", "T").slice(0, 16);
+		}
 		setPersonnelForms((forms) => [...forms, { personnel_id: null, job: "", start_time: defaultDateTime, end_time: defaultDateTime }]);
 	};
 
@@ -150,6 +152,11 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 	};
 
 	const handlePersonnelAssignmentSubmit = async () => {
+		if(personnelFormErrors){
+			dispatch(showToast("End time needs to be later than start time. Please update then try again", "error"))
+			return
+		}
+
 		const toApiFormat = (dt) => (dt ? dt + ":00+08:00" : "");
 		const payload = {
 			event_id: event.id,
@@ -218,6 +225,16 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 			},
 		]);
 	};
+	// 1. Add this validation function inside your component:
+	const getPersonnelFormErrors = () => {
+		return personnelForms.map((form) => {
+			if (form.start_time && form.end_time && form.end_time <= form.start_time) {
+				return "End time must be after start time.";
+			}
+			return "";
+		});
+	};
+	const personnelFormErrors = getPersonnelFormErrors();
 
 	const handleOpenInsightForm = async () => {
 		try {
@@ -300,13 +317,15 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		setShowInsightFormDisabled(false);
 		setShowPersonnalForm(false);
 		onClose();
-		setPersonnelForms([{
-			personnel_id: null,
-			event_id: null,
-			job: "",
-			start_time: "",
-			end_time: "",
-		}]);
+		setPersonnelForms([
+			{
+				personnel_id: null,
+				event_id: null,
+				job: "",
+				start_time: "",
+				end_time: "",
+			},
+		]);
 	};
 
 	return (
@@ -516,13 +535,19 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 													</select>
 												</td>
 												<td>
-													<input type="text" name="job" className="table-field-input" placeholder="Job" value={form.job || ""} onChange={(e) => handlePersonnelFormChange(idx, e)} />
+													<input
+														type="text"
+														name="job"
+														className="table-field-input"
+														placeholder="Job"
+														value={form.job || ""}
+														onChange={(e) => handlePersonnelFormChange(idx, e)}
+													/>
 												</td>
 												<td>
 													<input
 														type="datetime-local"
 														name="start_time"
-														className="table-field-input" 
 														placeholder="Start Time"
 														value={form.start_time || ""}
 														onChange={(e) => handlePersonnelFormChange(idx, e)}
@@ -532,7 +557,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 													<input
 														type="datetime-local"
 														name="end_time"
-														className="table-field-input" 
+														className={`table-field-input ${personnelFormErrors[idx] ? "input-error" : ""}`}
 														placeholder="End Time"
 														value={form.end_time || ""}
 														onChange={(e) => handlePersonnelFormChange(idx, e)}
@@ -551,7 +576,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 													Add Row
 												</button>
 											</td>
-											<td >
+											<td>
 												<button type="button" className="table-btn-success" onClick={handlePersonnelAssignmentSubmit}>
 													Submit
 												</button>

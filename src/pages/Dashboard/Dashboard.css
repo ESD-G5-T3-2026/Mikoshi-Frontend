@@ -541,3 +541,7 @@ th {
   border-color: #b91c1c;
   color: #fff;
 }
+
+.input-error {
+  border: 2px solid red;
+}

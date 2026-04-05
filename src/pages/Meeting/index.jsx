@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { getMeetings, createMeeting } from "../../services/meetingApi";
+import { getMeetings, createMeeting, refreshMeetings } from "../../services/meetingApi";
 import "../Dashboard/Dashboard.css";
 import CreateMeetingModal from "./components/CreateMeetingModal";
 import { showToast } from "../../store/toast";
@@ -10,6 +10,8 @@ import { getPersonnel } from "../../services/personnelApi";
 const CREATE_MEETING_REQUEST = "meeting/CREATE_MEETING_REQUEST";
 const CREATE_MEETING_SUCCESS = "meeting/CREATE_MEETING_SUCCESS";
 const CREATE_MEETING_FAILURE = "meeting/CREATE_MEETING_FAILURE";
+const REFRESH_MEETING_REQUEST = "meeting/REFRESH_MEETING_REQUEST";
+const REFRESH_MEETING_SUCCESS = "meeting/REFRESH_MEETING_SUCCESS";
 
 const initialCreateMeetingForm = {
 	meeting_name: "",
@@ -96,55 +98,54 @@ function MeetingPage() {
 		const months = Math.ceil(diffDays / 30);
 		return `(In ${months} month${months === 1 ? "" : "s"})`;
 	};
+	async function fetchMeetings() {
+		dispatch({ type: "MEETINGS_REQUEST" });
+
+		let personnelTemp = [];
+		try {
+			dispatch({ type: "GET_PERSONNEL_REQUEST" });
+			const personnelData = await getPersonnel(clubId);
+			const results = personnelData.data;
+			personnelTemp = results.map((item) => ({
+				id: String(item.id),
+				name: item.name,
+				handle: item.telegram_handle,
+			}));
+			setPersonnelOptions(personnelTemp);
+			dispatch({ type: "GET_PERSONNEL_SUCCESS" });
+		} catch {
+			dispatch({ type: "GET_PERSONNEL_FAILURE" });
+			dispatch(showToast("Failed to create meeting.", "error"));
+		}
+
+		try {
+			const json = await getMeetings(clubId);
+			if (json.status === "ok" && Array.isArray(json.data)) {
+				setMeetings(
+					json.data
+						.map((m) => ({
+							id: m.id,
+							name: m.meeting_name,
+							dt: new Date(m.meeting_dt).toLocaleString(),
+							meeting_dt: m.meeting_dt,
+							timeful_link: m.timeful_link,
+							zoom_link: m.zoom_link,
+							personnel_list: Object.keys(m.personnel_list || {}).map((id) => {
+								const found = personnelTemp.find((p) => String(p.id) === String(id));
+								return found ? found.name : id;
+							}),
+							status: m.status,
+						}))
+						.sort((a, b) => new Date(b.dt) - new Date(a.dt)),
+				);
+			}
+			dispatch({ type: "MEETINGS_SUCCESS" });
+		} catch (e) {
+			dispatch({ type: "MEETINGS_FAILURE", payload: e.message });
+		}
+	}
 
 	useEffect(() => {
-		async function fetchMeetings() {
-			dispatch({ type: "MEETINGS_REQUEST" });
-
-			let personnelTemp = [];
-			try {
-				dispatch({ type: "GET_PERSONNEL_REQUEST" });
-				getPersonnel(clubId).then((data) => {
-					const results = data.data;
-					personnelTemp = results.map((item) => ({
-						id: String(item.id),
-						name: item.name,
-						handle: item.telegram_handle,
-					}));
-					setPersonnelOptions(personnelTemp);
-				});
-				dispatch({ type: "GET_PERSONNEL_SUCCESS" });
-			} catch {
-				dispatch({ type: "GET_PERSONNEL_FAILURE" });
-				dispatch(showToast("Failed to create meeting.", "error"));
-			}
-
-			try {
-				const json = await getMeetings(clubId);
-				if (json.status === "ok" && Array.isArray(json.data)) {
-					setMeetings(
-						json.data
-							.map((m) => ({
-								id: m.id,
-								name: m.meeting_name,
-								dt: new Date(m.meeting_dt).toLocaleString(),
-								meeting_dt: m.meeting_dt,
-								timeful_link: m.timeful_link,
-								zoom_link: m.zoom_link,
-								personnel_list: Object.keys(m.personnel_list || {}).map((id) => {
-									const found = personnelTemp.find((p) => String(p.id) === String(id));
-									return found ? found.name : id;
-								}),
-								status: m.status,
-							}))
-							.sort((a, b) => new Date(b.dt) - new Date(a.dt)),
-					);
-				}
-				dispatch({ type: "MEETINGS_SUCCESS" });
-			} catch (e) {
-				dispatch({ type: "MEETINGS_FAILURE", payload: e.message });
-			}
-		}
 		fetchMeetings();
 	}, [clubId, dispatch]);
 
@@ -192,18 +193,30 @@ function MeetingPage() {
 			dispatch({ type: CREATE_MEETING_SUCCESS });
 			dispatch(showToast("Meeting created successfully.", "success"));
 			setCreateMeetingForm(initialCreateMeetingForm);
-		} catch (e){
-			console.log(e)
+		} catch (e) {
+			console.log(e);
 			dispatch({ type: CREATE_MEETING_FAILURE });
 			dispatch(showToast("Failed to create meeting.", "error"));
 		}
+	};
+
+	const handleRefreshMeeting = async () => {
+		dispatch({ type: REFRESH_MEETING_REQUEST });
+		await refreshMeetings();
+		await fetchMeetings();
+		dispatch({ type: REFRESH_MEETING_SUCCESS });
 	};
 
 	return (
 		<main className="dashboard-page">
 			<section className="dashboard-card" aria-label="Meetings">
 				<div className="dashboard-header-row">
-					<h1>View Meetings</h1>
+					<div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+						<h1 style={{ margin: 0 }}>View Meetings</h1>
+						<button type="button" className="event-modal-action-btn" aria-label="Refresh meetings" onClick={handleRefreshMeeting}>
+							⟳ Refresh
+						</button>
+					</div>
 					<button type="button" className="dashboard-add-button" aria-label="Add meeting" onClick={() => handleOpenMeetingModal()}>
 						<span className="dashboard-add-button-icon">+</span>
 					</button>
@@ -215,9 +228,7 @@ function MeetingPage() {
 						meetings.map((meeting) => (
 							<article className="event-card" key={meeting.id}>
 								<div className="event-card-top">
-									<h2>
-										Meeting {meeting.name ? meeting.name : meeting.id}
-									</h2>
+									<h2>Meeting {meeting.name ? meeting.name : meeting.id}</h2>
 									{/* <span className="event-datetime">{normalizeDateTime(meeting.dt)}</span> */}
 								</div>
 								<p>Status: {meeting.status}</p>

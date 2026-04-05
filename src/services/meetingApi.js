@@ -2,6 +2,7 @@ import apiClient from './apiClient'
 
 const PATH = '/meeting'
 const COMPO_PATH = '/schedule-meeting'
+const CRON_PATH = "/cron"
 
 export async function getMeetings(clubId) {
   const response = await apiClient.get(`${PATH}/${clubId}`)
@@ -10,5 +11,8 @@ export async function getMeetings(clubId) {
 export async function createMeeting(payload) {
   const response = await apiClient.post(`${COMPO_PATH}/schedule-meeting`, payload)
   return response.data
+}
+export async function refreshMeetings() {
+  await apiClient.post(`${CRON_PATH}/sync`)
 }
 

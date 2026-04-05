@@ -117,10 +117,9 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 			if (event.datetime) {
 				defaultDateTime = event.datetime.replace(" ", "T").slice(0, 16);
 			}
-
 			setPersonnelForms([
 				{
-					personnel_id: null,
+					personnel_id: personnel.data.length > 0 ? personnel.data[0].id : null,
 					job: "",
 					start_time: defaultDateTime,
 					end_time: defaultDateTime,
@@ -134,6 +133,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 	};
 
 	const handlePersonnelFormChange = (idx, e) => {
+		console.log(personnelForms)
 		const { name, value } = e.target;
 		setPersonnelForms((forms) => forms.map((form, i) => (i === idx ? { ...form, [name]: name === "personnel_id" ? Number(value) : value } : form)));
 	};
@@ -144,7 +144,15 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 		if (event.datetime) {
 			defaultDateTime = event.datetime.replace(" ", "T").slice(0, 16);
 		}
-		setPersonnelForms((forms) => [...forms, { personnel_id: null, job: "", start_time: defaultDateTime, end_time: defaultDateTime }]);
+		setPersonnelForms((forms) => [
+			...forms,
+			{
+				personnel_id: personnel.length > 0 ? personnel[0].id : null,
+				job: "",
+				start_time: defaultDateTime,
+				end_time: defaultDateTime,
+			},
+		]);
 	};
 
 	const removePersonnelFormRow = (idx) => {
@@ -152,9 +160,9 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 	};
 
 	const handlePersonnelAssignmentSubmit = async () => {
-		if(personnelFormErrors){
-			dispatch(showToast("End time needs to be later than start time. Please update then try again", "error"))
-			return
+		if (personnelFormErrors.some(Boolean)) {
+			dispatch(showToast("End time needs to be later than start time. Please update then try again", "error"));
+			return;
 		}
 
 		const toApiFormat = (dt) => (dt ? dt + ":00+08:00" : "");
@@ -225,11 +233,17 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 			},
 		]);
 	};
-	// 1. Add this validation function inside your component:
 	const getPersonnelFormErrors = () => {
 		return personnelForms.map((form) => {
-			if (form.start_time && form.end_time && form.end_time <= form.start_time) {
-				return "End time must be after start time.";
+			if (form.start_time && form.end_time) {
+				const start = Date.parse(form.start_time);
+				const end = Date.parse(form.end_time);
+				if (isNaN(start) || isNaN(end)) {
+					return "Invalid date format.";
+				}
+				if (end <= start) {
+					return "End time must be after start time.";
+				}
 			}
 			return "";
 		});
@@ -549,6 +563,7 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 														type="datetime-local"
 														name="start_time"
 														placeholder="Start Time"
+														className={`table-field-input ${personnelFormErrors[idx] ? "input-error" : ""}`}
 														value={form.start_time || ""}
 														onChange={(e) => handlePersonnelFormChange(idx, e)}
 													/>

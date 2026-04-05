@@ -203,8 +203,12 @@ function MeetingPage() {
 	const handleRefreshMeeting = async () => {
 		dispatch({ type: REFRESH_MEETING_REQUEST });
 		await refreshMeetings();
-		await fetchMeetings();
 		dispatch({ type: REFRESH_MEETING_SUCCESS });
+
+	};
+
+	const handleGetMeeting = async () => {
+		await fetchMeetings();
 	};
 
 	return (
@@ -214,6 +218,9 @@ function MeetingPage() {
 					<div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
 						<h1 style={{ margin: 0 }}>View Meetings</h1>
 						<button type="button" className="event-modal-action-btn" aria-label="Refresh meetings" onClick={handleRefreshMeeting}>
+							⟳ Cron Job Trigger
+						</button>
+						<button type="button" className="event-modal-action-btn" aria-label="Refresh meetings" onClick={handleGetMeeting}>
 							⟳ Refresh
 						</button>
 					</div>

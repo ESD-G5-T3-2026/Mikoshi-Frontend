@@ -1,17 +1,23 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+
 import { getMeetings, createMeeting } from "../../services/meetingApi";
 import "../Dashboard/Dashboard.css";
 import CreateMeetingModal from "./components/CreateMeetingModal";
 import { showToast } from "../../store/toast";
+import { getPersonnel } from "../../services/personnelApi";
 
 const CREATE_MEETING_REQUEST = "meeting/CREATE_MEETING_REQUEST";
 const CREATE_MEETING_SUCCESS = "meeting/CREATE_MEETING_SUCCESS";
 const CREATE_MEETING_FAILURE = "meeting/CREATE_MEETING_FAILURE";
 
 const initialCreateMeetingForm = {
+	meeting_name: "",
 	meeting_datetime: "",
 	personnel_list: {},
+	meeting_dates: [],
+	meeting_end: "",
+	meeting_start: "",
 };
 
 function MeetingPage() {
@@ -20,6 +26,7 @@ function MeetingPage() {
 	const clubId = user?.club_id;
 	const dispatch = useDispatch();
 	const isLoading = useSelector((state) => state.loading.isLoading);
+	const [personnelOptions, setPersonnelOptions] = useState([]);
 	const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 	const [createMeetingForm, setCreateMeetingForm] = useState(initialCreateMeetingForm);
 
@@ -93,6 +100,25 @@ function MeetingPage() {
 	useEffect(() => {
 		async function fetchMeetings() {
 			dispatch({ type: "MEETINGS_REQUEST" });
+
+			let personnelTemp = [];
+			try {
+				dispatch({ type: "GET_PERSONNEL_REQUEST" });
+				getPersonnel(clubId).then((data) => {
+					const results = data.data;
+					personnelTemp = results.map((item) => ({
+						id: String(item.id),
+						name: item.name,
+						handle: item.telegram_handle,
+					}));
+					setPersonnelOptions(personnelTemp);
+				});
+				dispatch({ type: "GET_PERSONNEL_SUCCESS" });
+			} catch {
+				dispatch({ type: "GET_PERSONNEL_FAILURE" });
+				dispatch(showToast("Failed to create meeting.", "error"));
+			}
+
 			try {
 				const json = await getMeetings(clubId);
 				if (json.status === "ok" && Array.isArray(json.data)) {
@@ -100,12 +126,16 @@ function MeetingPage() {
 						json.data
 							.map((m) => ({
 								id: m.id,
+								name: m.meeting_name,
 								dt: new Date(m.meeting_dt).toLocaleString(),
 								meeting_dt: m.meeting_dt,
 								timeful_link: m.timeful_link,
 								zoom_link: m.zoom_link,
-								personnel_list: m.personnel_list,
-								status: new Date() >= new Date(m.meeting_dt) ? "Completed" : m.status,
+								personnel_list: Object.keys(m.personnel_list || {}).map((id) => {
+									const found = personnelTemp.find((p) => String(p.id) === String(id));
+									return found ? found.name : id;
+								}),
+								status: m.status,
 							}))
 							.sort((a, b) => new Date(b.dt) - new Date(a.dt)),
 					);
@@ -135,33 +165,35 @@ function MeetingPage() {
 	};
 	const handleCreateMeetingSubmit = async (event) => {
 		event.preventDefault();
+
 		const payload = {
-			meeting_dt: createMeetingForm.meeting_datetime,
-			club_id: user?.club_id,
-			personnel_list: createMeetingForm.personnel_list,
+			clubId: user?.club_id,
+			meetingName: createMeetingForm.meeting_name,
+			meetingDates: createMeetingForm.meeting_dates,
+			meetingEnd: createMeetingForm.meeting_end,
+			meetingStart: createMeetingForm.meeting_start,
+			personnel: Object.keys(createMeetingForm.personnel_list).map(String),
+			timefulType: "specific_dates",
+			timezone: "Asia/Singapore",
 		};
 		dispatch({ type: CREATE_MEETING_REQUEST });
 
 		try {
 			setIsCreateModalOpen(false);
-			const response = await createMeeting(user?.club_id, payload);
-			const newMeeting = response.data[0];
-
+			const newMeeting = await createMeeting(payload);
 			const mappedMeeting = {
-				id: newMeeting.id,
-				dt: new Date(newMeeting.meeting_dt).toLocaleString(),
-				meeting_dt: newMeeting.meeting_dt,
-				timeful_link: newMeeting.timeful_link,
-				zoom_link: newMeeting.zoom_link,
-				personnel_list: newMeeting.personnel_list,
-				status: new Date() >= new Date(newMeeting.meeting_dt) ? "Completed" : newMeeting.status,
+				name: payload.meetingName,
+				timeful_link: newMeeting.timefulUrl,
+				personnel_list: Object.values(createMeetingForm.personnel_list),
+				status: "Pending",
 			};
 
 			setMeetings((prev) => [mappedMeeting, ...prev].sort((a, b) => new Date(b.meeting_dt) - new Date(a.meeting_dt)));
 			dispatch({ type: CREATE_MEETING_SUCCESS });
 			dispatch(showToast("Meeting created successfully.", "success"));
 			setCreateMeetingForm(initialCreateMeetingForm);
-		} catch {
+		} catch (e){
+			console.log(e)
 			dispatch({ type: CREATE_MEETING_FAILURE });
 			dispatch(showToast("Failed to create meeting.", "error"));
 		}
@@ -184,14 +216,13 @@ function MeetingPage() {
 							<article className="event-card" key={meeting.id}>
 								<div className="event-card-top">
 									<h2>
-										Meeting {meeting.id} {getDurationLeft(meeting.meeting_dt)}
+										Meeting {meeting.name ? meeting.name : meeting.id}
 									</h2>
-									<span className="event-datetime">{normalizeDateTime(meeting.dt)}</span>
+									{/* <span className="event-datetime">{normalizeDateTime(meeting.dt)}</span> */}
 								</div>
 								<p>Status: {meeting.status}</p>
-								{meeting.personnel_list && Object.keys(meeting.personnel_list).length > 0 && <p>Attendees: {Object.keys(meeting.personnel_list).join(", ")}</p>}
-
-								{meeting.status == "Pending" ? (
+								{meeting.personnel_list && Object.values(meeting.personnel_list).length > 0 && <p>Attendees: {meeting.personnel_list.join(", ")}</p>}
+								{meeting.status == "Pending" || meeting.status == "Waiting" ? (
 									<div>
 										<p>
 											Timeful Link: <a href={meeting.timeful_link}> Click Here</a>
@@ -219,6 +250,8 @@ function MeetingPage() {
 						onChange={handleCreateMeetingChange}
 						onSubmit={handleCreateMeetingSubmit}
 						isOpen={isCreateModalOpen}
+						personnelOptions={personnelOptions}
+						setPersonnelOptions={setPersonnelOptions}
 					/>
 				)}
 			</section>

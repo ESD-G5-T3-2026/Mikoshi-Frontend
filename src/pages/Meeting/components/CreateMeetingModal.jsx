@@ -1,58 +1,18 @@
-import { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { getPersonnel } from "../../../services/personnelApi";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+
 import { showToast } from "../../../store/toast";
 
-function CreateMeetingModal({ isOpen, onClose, onChange, onSubmit, form }) {
-	const dispatch = useDispatch();
+function CreateMeetingModal({ isOpen, onClose, onChange, onSubmit, form, personnelOptions, setPersonnelOptions }) {
 	const [showValidation, setShowValidation] = useState(false);
-	const [personnelOptions, setPersonnelOptions] = useState([]);
-	const [loadingPersonnel, setLoadingPersonnel] = useState(false);
-	const user = useSelector((state) => state.auth.user);
-	const clubId = user?.club_id;
-
-	useEffect(() => {
-		if (isOpen) {
-			setLoadingPersonnel(true);
-			try {
-				dispatch({ type: "GET_PERSONNEL_REQUEST" });
-				getPersonnel(clubId).then((data) => {
-					const results = data.data;
-					const filtered = results.map((item) => ({
-						name: item.name,
-						handle: item.telegram_handle,
-					}));
-					setPersonnelOptions(filtered);
-					setLoadingPersonnel(false);
-				});
-				dispatch({ type: "GET_PERSONNEL_SUCCESS" });
-			} catch {
-				setLoadingPersonnel(false);
-				dispatch({ type: "GET_PERSONNEL_FAILURE" });
-				dispatch(showToast("Failed to create meeting.", "error"));
-			}
-		}
-	}, [isOpen]);
 
 	if (!isOpen) {
 		return null;
 	}
 
-	const fieldErrors = {
-		meeting_datetime: !String(form.meeting_datetime).trim()
-			? "Date and Time are required."
-			: form.meeting_datetime && new Date(form.meeting_datetime) < new Date()
-				? "Date and Time must be in the future."
-				: "",
-	};
-
 	const handleSubmit = (event) => {
 		event.preventDefault();
 		setShowValidation(true);
-
-		if (fieldErrors.meeting_datetime) {
-			return;
-		}
 
 		onSubmit(event);
 	};
@@ -69,40 +29,106 @@ function CreateMeetingModal({ isOpen, onClose, onChange, onSubmit, form }) {
 
 				<form className="event-create-form" onSubmit={handleSubmit} noValidate>
 					<label className="event-create-field">
-						<span>Date & Time*</span>
-						<input type="datetime-local" name="meeting_datetime" value={form.meeting_datetime} onChange={onChange} aria-invalid={showValidation && Boolean(fieldErrors.meeting_datetime)} />
-						{showValidation && fieldErrors.meeting_datetime && <span className="event-create-error">{fieldErrors.meeting_datetime}</span>}
+						<span>Meeting Name</span>
+						<input type="text" name="meeting_name" value={form.meeting_name} onChange={onChange} />
 					</label>
 
 					<label className="event-create-field">
-						<span>Select Attendees</span>
-						{loadingPersonnel ? (
-							<div style={{ padding: "8px 0" }}>Loading attendees...</div>
-						) : (
-							<div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-								{personnelOptions.map(({ name, handle }) => (
-									<label key={name} style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 400 }}>
-										<input
-											type="checkbox"
-											name="personnel_list"
-											value={name}
-											checked={form.personnel_list && form.personnel_list[name] ? true : false}
-											onChange={(e) => {
-												let updated = { ...(form.personnel_list || {}) };
-												if (e.target.checked) {
-													updated[name] = handle;
-												} else {
-													delete updated[name];
-												}
-												onChange({ target: { name: "personnel_list", value: updated } });
-											}}
-											style={{ width: "auto" }}
-										/>
-										{name}
-									</label>
-								))}
+						<span>Dates*</span>
+						{form.meeting_dates.map((date, idx) => (
+							<div key={idx} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+								<input
+									type="date"
+									value={date}
+									onChange={(e) => {
+										const newDates = [...form.meeting_dates];
+										newDates[idx] = e.target.value;
+										onChange({ target: { name: "meeting_dates", value: newDates } });
+									}}
+									required
+								/>
+								{form.meeting_dates.length > 1 && (
+									<button
+										type="button"
+										className="event-modal-action-btn event-modal-action-cancel"
+										onClick={() => {
+											const newDates = form.meeting_dates.filter((_, i) => i !== idx);
+											onChange({ target: { name: "meeting_dates", value: newDates } });
+										}}>
+										Remove
+									</button>
+								)}
 							</div>
-						)}
+						))}
+						<button
+							type="button"
+							className="event-modal-action-btn"
+							onClick={() => onChange({ target: { name: "meeting_dates", value: [...form.meeting_dates, ""] } })}
+							style={{ marginTop: "8px" }}>
+							Add Date
+						</button>
+						{showValidation && (!form.meeting_dates || !form.meeting_dates.filter(Boolean).length) && <span className="event-create-error">At least one date is required.</span>}
+					</label>
+
+					<div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+						<label className="event-create-field" style={{ flex: 1 }}>
+							<span>Start of Availability</span>
+							<input
+								type="text"
+								name="meeting_start"
+								value={form.meeting_start}
+								onChange={onChange}
+								pattern="^([01]\d|2[0-3])[0-5]\d$"
+								placeholder="e.g. 0930"
+								maxLength={4}
+								required
+								title="Enter time in 24-hour HHMM format (e.g., 0930, 1745)"
+								inputMode="numeric"
+							/>
+						</label>
+						<label className="event-create-field" style={{ flex: 1 }}>
+							<span>End of Availability</span>
+							<input
+								type="text"
+								name="meeting_end"
+								value={form.meeting_end}
+								onChange={onChange}
+								pattern="^([01]\d|2[0-3])[0-5]\d$"
+								placeholder="e.g. 1745"
+								maxLength={4}
+								required
+								title="Enter time in 24-hour HHMM format (e.g., 0930, 1745)"
+								inputMode="numeric"
+							/>
+						</label>
+					</div>
+
+					<label className="event-create-field">
+						<span>Select Attendees</span>
+
+						<div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+							{personnelOptions.map(({ id, name }) => (
+								<label key={id} style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 400 }}>
+									<input
+										type="checkbox"
+										name="personnel_list"
+										value={name}
+										checked={form.personnel_list && Object.prototype.hasOwnProperty.call(form.personnel_list, id)}
+										onChange={(e) => {
+											let updated = { ...(form.personnel_list || {}) };
+											if (e.target.checked) {
+												updated[id] = name;
+											} else {
+												delete updated[id];
+											}
+											onChange({ target: { name: "personnel_list", value: updated } });
+										}}
+										style={{ width: "auto" }}
+									/>
+									{name}
+								</label>
+							))}
+						</div>
 					</label>
 					<div className="event-create-actions">
 						<button type="button" className="event-modal-action-btn event-modal-action-cancel" onClick={onClose}>

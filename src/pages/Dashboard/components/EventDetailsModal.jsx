@@ -133,7 +133,6 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 	};
 
 	const handlePersonnelFormChange = (idx, e) => {
-		console.log(personnelForms)
 		const { name, value } = e.target;
 		setPersonnelForms((forms) => forms.map((form, i) => (i === idx ? { ...form, [name]: name === "personnel_id" ? Number(value) : value } : form)));
 	};
@@ -340,6 +339,27 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 				end_time: "",
 			},
 		]);
+		setPersonnelFormData([])
+	};
+
+	const formatDateTimeUTC8 = (rawDateTime) => {
+		if (!rawDateTime) return "-";
+		// Normalize to "YYYY-MM-DD HH:mm"
+		let normalized = rawDateTime.replace("T", " ").slice(0, 16);
+		// Parse as local time
+		let date = new Date(normalized.replace(/-/g, "/"));
+		if (isNaN(date.getTime())) return rawDateTime;
+		// Add 8 hours
+		date = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+		// Format as "YYYY-MM-DD HH:mm"
+		const yyyy = date.getFullYear();
+		const mm = String(date.getMonth() + 1).padStart(2, "0");
+		const dd = String(date.getDate()).padStart(2, "0");
+		const hh = String(date.getHours()).padStart(2, "0");
+		const min = String(date.getMinutes()).padStart(2, "0");
+		const formatted = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+		// Use your formatDateTime
+		return formatDateTime(formatted);
 	};
 
 	return (
@@ -527,8 +547,8 @@ function EventDetailsModal({ event, onClose, formatDateTime, getDurationLeft, on
 												<tr key={assignment.id}>
 													<td>{person ? person.name : assignment.personnel_id}</td>
 													<td>{assignment.job}</td>
-													<td>{formatDateTime(assignment.start_time.replace("T", " ").slice(0, 16))}</td>
-													<td>{formatDateTime(assignment.end_time.replace("T", " ").slice(0, 16))}</td>
+													<td>{formatDateTimeUTC8(assignment.start_time.replace("T", " ").slice(0, 16))}</td>
+													<td>{formatDateTimeUTC8(assignment.end_time.replace("T", " ").slice(0, 16))}</td>
 													<td>
 														<button className="table-btn-delete" onClick={() => handlePersonnelAssignmentDelete(assignment.id)}>
 															Remove

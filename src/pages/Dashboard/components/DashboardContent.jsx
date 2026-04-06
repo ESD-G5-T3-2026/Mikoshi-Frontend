@@ -14,7 +14,7 @@ function DashboardContent({ filteredRows, setSelectedEvent, formatDateTime, getD
       }}
     >
       <div className="event-card-top">
-        <h2>{row.name} {row.year}</h2>
+        <h2>{row.name} {row.year} </h2>
       </div>
       <p>
         <span className="event-datetime">{formatDateTime(row.datetime)}</span> {getDurationLeft(row.datetime)}

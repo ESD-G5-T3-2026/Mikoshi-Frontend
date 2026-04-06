@@ -192,11 +192,11 @@ function DashboardPage() {
 
 		try {
 			const responseData = await createEvent(payload);
-			const createdEvent = responseData?.data || responseData?.event || responseData;
+			const createdEvent = responseData?.Event ;
 
 			setRows((previousRows) => [
 				{
-					id: createdEvent?.id ?? createdEvent?.event_id ?? Date.now(),
+					id: createdEvent?.id ?? createdEvent?.event_id,
 					name: createdEvent?.event_name ?? payload.event_name,
 					year: createdEvent?.event_year ?? payload.event_year,
 					datetime: createdEvent?.event_date ? `${createdEvent.event_date} 00:00` : `${payload.event_date} 00:00`,

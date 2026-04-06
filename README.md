@@ -1,16 +1,47 @@
-# React + Vite
+# Mikoshi Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+>This is the frontend for the Mikoshi project, built with React and Vite.
 
-Currently, two official plugins are available:
+## Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- [Node.js](https://nodejs.org/) (v18 or newer recommended)
+- [npm](https://www.npmjs.com/) (comes with Node.js)
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-## Expanding the ESLint configuration
+2. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
+   The app will be available at the address shown in the terminal (default: http://localhost:6620/).
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Available Scripts
+
+- `npm run dev` — Start the development server with hot reload.
+- `npm run build` — Build the app for production (output in `dist/`).
+- `npm run preview` — Preview the production build locally.
+- `npm run lint` — Run ESLint to check for code issues.
+
+## Notes
+
+- The dev server is configured to run on port 6620. If this port is in use, stop the conflicting process or change the port in `vite.config.js`.
+- For HTTPS or custom host settings, see `vite.config.js`.
+
+## Project Structure
+
+- `src/` — React source code
+- `public/` — Static assets
+- `package.json` — Project metadata and scripts
+- `vite.config.js` — Vite configuration
+
+## Troubleshooting
+
+- If you encounter issues with dependencies, try deleting `node_modules` and `package-lock.json`, then run `npm install` again.
+
+---
+For more information, see the comments in the source files or contact the project maintainers.

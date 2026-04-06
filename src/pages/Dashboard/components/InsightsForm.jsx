@@ -2,7 +2,7 @@ function InsightsForm({ show, activeForm, insightForm, handleInsightUpdate, hand
 	if (!show) return;
 	return (
 		<form className="insight-form" onSubmit={handleInsightSubmit} style={{ marginTop: "1em" }}>
-			{!activeForm ? <h2>Past Remarks</h2> : <h2>Add Remarks:</h2>}
+			{!activeForm ? <h2>Past Insights</h2> : <h2>Add Insights:</h2>}
 			<div style={{ display: "flex", flexDirection: "column", gap: "0.5em" }}>
 				<div>
 					<label htmlFor="whatHappened" className="event-create-field">
